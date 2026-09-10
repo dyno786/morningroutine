@@ -1,0 +1,967 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning practice — English & Maths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#F1F6FC; --card:#FFFFFF; --ink:#1B2A41; --soft:#63758C;
+    --line:#DCE6F2;
+    --maths:#0E9AA7; --maths-soft:#E2F4F6;
+    --eng:#7B5CD6; --eng-soft:#EFEAFC;
+    --win:#17A673; --win-soft:#E3F6EE;
+    --oops:#E4572E; --oops-soft:#FDECE6;
+    --sun:#FFC93C;
+    --accent:var(--maths); --accent-soft:var(--maths-soft);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg)}
+  body{
+    font-family:Lexend,system-ui,sans-serif;color:var(--ink);line-height:1.55;
+    padding:14px 12px 70px;-webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:660px;margin:0 auto}
+  .card{background:var(--card);border-radius:18px;padding:20px 18px;box-shadow:0 2px 0 var(--line),0 8px 24px rgba(27,42,65,.06)}
+  h1{font-family:Fredoka,sans-serif;font-weight:600;font-size:1.6rem;line-height:1.2}
+  h2{font-family:Fredoka,sans-serif;font-weight:500;font-size:1.15rem;color:var(--soft)}
+  h3{font-size:.92rem;font-weight:700}
+  .sub{color:var(--soft);font-size:.9rem;margin-top:8px}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ---- subject tabs ---- */
+  .tabs{display:flex;gap:8px;margin:14px 0 18px}
+  .tab{
+    flex:1;border:none;border-radius:14px;padding:14px 10px;cursor:pointer;
+    font-family:Fredoka,sans-serif;font-size:1.05rem;font-weight:600;
+    background:#fff;color:var(--soft);box-shadow:0 2px 0 var(--line);
+  }
+  .tab:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+  .tab.on{color:#fff}
+  .tab.on.m{background:var(--maths);box-shadow:0 3px 0 #0A7D87}
+  .tab.on.e{background:var(--eng);box-shadow:0 3px 0 #5F44AC}
+  .tab .c{display:block;font-family:Lexend;font-size:.72rem;font-weight:500;opacity:.85;margin-top:1px}
+
+  /* ---- day tiles ---- */
+  .week{margin:20px 0 8px;font-size:.78rem;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+  .days{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+  .day{
+    background:#fff;border:2px solid var(--line);border-radius:14px;padding:13px 14px;
+    text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative;
+  }
+  .day:hover{border-color:var(--accent)}
+  .day:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+  .day .n{display:block;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--soft)}
+  .day .t{display:block;font-weight:600;font-size:.93rem;line-height:1.3;margin-top:3px}
+  .day.done{border-color:var(--win);background:var(--win-soft)}
+  .day .star{position:absolute;top:10px;right:12px;font-size:.72rem;font-weight:700;color:var(--win);font-family:'JetBrains Mono',monospace}
+
+  /* ---- rule card ---- */
+  .rule{background:var(--accent-soft);border-radius:14px;padding:16px;margin:16px 0}
+  .eg{
+    background:#fff;border-radius:10px;padding:11px 13px;margin-top:9px;
+    font-family:'JetBrains Mono',monospace;font-size:.88rem;line-height:1.8;
+    white-space:pre-wrap;color:var(--ink);
+  }
+  .eg b{color:var(--win)}
+
+  /* ---- quiz ---- */
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .track{flex:1;height:9px;background:var(--line);border-radius:5px;overflow:hidden}
+  .track i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .3s}
+  .count{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--soft);white-space:nowrap}
+  .timer{
+    font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;
+    background:var(--accent-soft);color:var(--accent);padding:5px 9px;border-radius:8px;white-space:nowrap;
+  }
+  .timer.low{background:#FFF3D6;color:#9A6B00}
+  .timer.up{background:var(--oops-soft);color:var(--oops)}
+
+  .ask{font-size:1.12rem;font-weight:600;line-height:1.45}
+  .instr{color:var(--soft);font-size:.85rem;margin:4px 0 14px}
+  .stem{
+    background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin-bottom:16px;
+    font-size:1.05rem;line-height:1.7;white-space:pre-wrap;
+  }
+  .stem.m{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.08rem}
+  .opts{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+  .opt{
+    display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:#fff;
+    border:2px solid var(--line);border-radius:12px;padding:14px;font:inherit;color:inherit;cursor:pointer;
+  }
+  .opt:hover:not(:disabled){border-color:var(--accent)}
+  .opt:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+  .opt .box{flex:none;width:24px;height:24px;border:2px solid var(--line);border-radius:7px;display:grid;place-items:center;font-size:.85rem;font-weight:700}
+  .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .opt.sel .box{background:var(--accent);border-color:var(--accent);color:#fff}
+  .opt.right{border-color:var(--win);background:var(--win-soft)}
+  .opt.right .box{background:var(--win);border-color:var(--win);color:#fff}
+  .opt.wrong{border-color:var(--oops);background:var(--oops-soft)}
+  .opt.wrong .box{background:var(--oops);border-color:var(--oops);color:#fff}
+  .opt:disabled{opacity:1;cursor:default}
+  .opt .v.num{font-family:'JetBrains Mono',monospace;font-weight:700}
+
+  .msg{padding:14px 15px;margin-bottom:14px;border-radius:12px;font-size:.93rem}
+  .msg b{display:block;margin-bottom:5px;font-family:Fredoka,sans-serif;font-size:1rem}
+  .msg.no{background:var(--oops-soft);color:#7A2A11}
+  .msg.no b{color:var(--oops)}
+  .msg.yes{background:var(--win-soft);color:#0B5138}
+  .msg.yes b{color:var(--win)}
+  .msg .work{font-family:'JetBrains Mono',monospace;font-size:.85rem;white-space:pre-wrap;line-height:1.75;margin-top:4px}
+  @media (prefers-reduced-motion:no-preference){
+    .msg{animation:pop .2s ease-out}
+    @keyframes pop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  }
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .btn{
+    font-family:Fredoka,sans-serif;font-size:1.02rem;font-weight:600;padding:14px 24px;border-radius:12px;
+    border:none;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.18);
+  }
+  .btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  .btn:disabled{background:#C3CFDE;box-shadow:0 3px 0 #AEBCCE;cursor:not-allowed}
+  .btn:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+  .btn.ghost{background:#fff;color:var(--accent);box-shadow:0 2px 0 var(--line);border:2px solid var(--line)}
+  .btn.sm{font-size:.9rem;padding:10px 16px}
+  .link{background:none;border:none;font:inherit;font-size:.85rem;color:var(--soft);text-decoration:underline;cursor:pointer;padding:6px}
+
+  .score{font-family:Fredoka,sans-serif;font-size:3.2rem;font-weight:700;line-height:1}
+  .score small{font-family:Lexend;font-size:.9rem;font-weight:500;color:var(--soft);margin-left:9px}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600;margin:3px 4px 0 0}
+
+  /* ---- parent area ---- */
+  input[type=password],input[type=number]{
+    font:inherit;padding:12px 14px;border:2px solid var(--line);border-radius:12px;width:100%;
+    font-family:'JetBrains Mono',monospace;font-size:1.1rem;text-align:center;
+  }
+  input:focus{outline:none;border-color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:10px}
+  th{text-align:left;font-size:.72rem;color:var(--soft);font-weight:700;padding:7px 6px;border-bottom:2px solid var(--line)}
+  td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.n{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+  .stat{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .stat div{flex:1;min-width:110px;background:var(--accent-soft);border-radius:12px;padding:12px 14px}
+  .stat b{display:block;font-family:Fredoka,sans-serif;font-size:1.5rem;line-height:1.1}
+  .stat span{font-size:.75rem;color:var(--soft)}
+  .logitem{border-left:4px solid var(--oops);background:#fff;border-radius:0 10px 10px 0;padding:11px 13px;margin-bottom:9px;font-size:.87rem}
+  .logitem .q{font-weight:600}
+  .logitem .d{color:var(--soft);font-size:.78rem;margin-top:3px}
+  .logitem .picks{margin-top:5px}
+  .tag{display:inline-block;background:var(--oops-soft);color:var(--oops);border-radius:6px;padding:2px 7px;font-size:.75rem;font-weight:600;margin:2px 4px 0 0;font-family:'JetBrains Mono',monospace}
+  .tag.ok{background:var(--win-soft);color:var(--win)}
+  textarea{width:100%;height:180px;font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:12px;border:2px solid var(--line);border-radius:12px;line-height:1.5}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .seg button{font:inherit;font-size:.85rem;font-weight:600;padding:9px 14px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--soft);cursor:pointer}
+  .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .hr{height:1px;background:var(--line);margin:20px 0}
+  .foot{text-align:center;margin-top:18px}
+</style>
+
+<div class="wrap">
+  <div id="home"></div>
+  <div id="brief" hidden></div>
+  <div id="quiz" hidden></div>
+  <div id="done" hidden></div>
+  <div id="parent" hidden></div>
+</div>
+
+<script>
+/* =======================================================================
+   MATHS — 20 mornings. Every question rebuilt from a lost mark.
+   ======================================================================= */
+const MATHS=[
+{n:1,wk:"Week 1 · Fractions, percentages and ratio",t:"Fractions of an amount",
+ rule:"Divide by the <b>bottom</b> number. Then multiply by the <b>top</b> number. That is the whole method and it never changes.",
+ eg:["3/5 of 45\n   45 ÷ 5 = 9   (bottom)\n    9 × 3 = <b>27</b>  (top)","2/3 of 24\n   24 ÷ 3 = 8\n    8 × 2 = <b>16</b>"],
+ qs:[
+ {a:"What is 1/4 of 20?",s:"1/4 of 20",o:["4","5","10","80"],c:1,h:"Divide by the bottom number, 4.",w:"20 ÷ 4 = 5."},
+ {a:"What is 3/5 of 45?",s:"3/5 of 45",o:["9","15","27","41"],c:2,h:"45 ÷ 5 first. Then multiply that by 3.",w:"45 ÷ 5 = 9, then 9 × 3 = 27. Stopping at 9 gives you only 1/5."},
+ {a:"What is 2/3 of 24?",s:"2/3 of 24",o:["8","12","16","36"],c:2,h:"24 ÷ 3, then × 2.",w:"24 ÷ 3 = 8, then 8 × 2 = 16."},
+ {a:"What is 3/4 of 28?",s:"3/4 of 28",o:["7","21","24","32"],c:1,h:"28 ÷ 4 = 7. Now multiply by the top number.",w:"7 × 3 = 21."},
+ {a:"What is 2/5 of 30?",s:"2/5 of 30",o:["6","10","12","15"],c:2,h:"30 ÷ 5 = 6. Then × 2.",w:"6 × 2 = 12."},
+ {a:"What is 3/10 of 30?",s:"3/10 of 30",o:["3","9","10","27"],c:1,h:"30 ÷ 10 = 3. Then × 3.",w:"3 × 3 = 9."}]},
+
+{n:2,wk:"Week 1 · Fractions, percentages and ratio",t:"Percentages of an amount",
+ rule:"Find <b>10% first</b> by dividing by 10, then build up. 20% is double it. 5% is half of it. 50% is half the whole thing. 75% means 3/4.",
+ eg:["20% of £6.80\n   10% = 6.80 ÷ 10 = £0.68\n   20% = 0.68 × 2 = <b>£1.36</b>","75% of £280\n   75% = 3/4\n   280 ÷ 4 = 70\n    70 × 3 = <b>£210</b>"],
+ qs:[
+ {a:"What is 10% of £6.80?",s:"10% of £6.80",o:["£0.68","£6.80","£0.68p","£68"],c:0,h:"10% means divide by 10.",w:"£6.80 ÷ 10 = £0.68."},
+ {a:"What is 20% of £6.80?",s:"20% of £6.80",o:["£0.68","£1.36","£3.40","£13.60"],c:1,h:"You know 10% is £0.68. Double it.",w:"£0.68 × 2 = £1.36."},
+ {a:"What is 50% of 90?",s:"50% of 90",o:["9","18","45","50"],c:2,h:"50% is just half.",w:"90 ÷ 2 = 45."},
+ {a:"A ring is valued at £280. Felix pays 75% of that. How much does he pay?",s:"75% of £280",o:["£70","£140","£200","£210"],c:3,h:"75% is 3/4. Divide by 4 first, then multiply by 3.",w:"280 ÷ 4 = 70, then 70 × 3 = £210. £200 is a guess — the method gives 210."},
+ {a:"A jug holds 300 ml. 80% is lemonade. How much lemonade?",s:"80% of 300 ml",o:["30 ml","60 ml","240 ml","280 ml"],c:2,h:"10% of 300 is 30. You need eight lots of that.",w:"30 × 8 = 240 ml. 280 just borrows a number close to 300 — work it out instead."},
+ {a:"What is 25% of 60?",s:"25% of 60",o:["6","15","25","30"],c:1,h:"25% is a quarter.",w:"60 ÷ 4 = 15."}]},
+
+{n:3,wk:"Week 1 · Fractions, percentages and ratio",t:"Turning one number into a percentage",
+ rule:"For <b>X out of Y</b>, write it as a fraction and simplify, or scale the bottom number up to 100. Remember: 1/2 = 50%, 1/4 = 25%, 1/5 = 20%, 3/4 = 75%, 1/10 = 10%.",
+ eg:["12 out of 60\n   12/60 = 1/5\n   1/5 = <b>20%</b>","0.46\n   0.46 = 46/100 = <b>46%</b>"],
+ qs:[
+ {a:"12 children out of 60 chose apricot. What percentage is that?",s:"12 out of 60",o:["5%","12%","20%","48%"],c:2,h:"Simplify 12/60. Both divide by 12.",w:"12/60 = 1/5, and 1/5 is 20%. 12 is the number of children, not the percentage."},
+ {a:"What is 1/5 as a percentage?",s:"1/5 = ?",o:["5%","15%","20%","25%"],c:2,h:"Five equal parts make 100%.",w:"100 ÷ 5 = 20%."},
+ {a:"What is 3/4 as a percentage?",s:"3/4 = ?",o:["34%","43%","75%","80%"],c:2,h:"A quarter is 25%. You want three of them.",w:"25 × 3 = 75%."},
+ {a:"What is 63/100 as a percentage?",s:"63/100 = ?",o:["6.3%","63%","0.63%","37%"],c:1,h:"Per cent means out of a hundred.",w:"63%."},
+ {a:"What is 0.46 as a percentage?",s:"0.46 = ?",o:["0.46%","4.6%","23%","46%"],c:3,h:"0.46 is 46 hundredths.",w:"46%. Multiply a decimal by 100 to make it a percentage."},
+ {a:"30 out of 50 pupils walk to school. What percentage is that?",s:"30 out of 50",o:["30%","50%","60%","80%"],c:2,h:"Double both numbers so the bottom becomes 100.",w:"30/50 = 60/100 = 60%."}]},
+
+{n:4,wk:"Week 1 · Fractions, percentages and ratio",t:"Fractions inside word problems",
+ rule:"Work out each share separately, then read the question again. If it asks how many are <b>left</b>, take the shares away from the total.",
+ eg:["30 bottles. Felix buys 2/5, Anita buys 3/10.\n   Felix: 30 ÷ 5 = 6, × 2 = 12\n   Anita: 30 ÷ 10 = 3, × 3 = 9\n   Left: 30 − 12 − 9 = <b>9</b>"],
+ qs:[
+ {a:"A shop has 30 bottles. Felix buys 2/5 of them. How many is that?",s:"2/5 of 30",o:["6","10","12","15"],c:2,h:"30 ÷ 5, then × 2.",w:"30 ÷ 5 = 6, then 6 × 2 = 12."},
+ {a:"Anita buys 3/10 of the same 30 bottles. How many is that?",s:"3/10 of 30",o:["3","9","10","13"],c:1,h:"30 ÷ 10, then × 3.",w:"30 ÷ 10 = 3, then 3 × 3 = 9."},
+ {a:"So how many bottles are LEFT?",s:"30 − 12 − 9",o:["9","12","21","24"],c:0,h:"They bought 12 and 9 between them. Take both away from 30.",w:"30 − 21 = 9 left. 21 is what they bought, not what remains."},
+ {a:"A wall has 24 tiles. 6 are shaded. One third must be shaded in total. How many MORE?",s:"1/3 of 24, minus the 6 done",o:["2","6","8","18"],c:0,h:"Work out a third of 24 first, then subtract the ones already done.",w:"24 ÷ 3 = 8 in total, and 6 are done, so 2 more."},
+ {a:"60 children were asked. 1/5 chose apricot. How many children is that?",s:"1/5 of 60",o:["5","12","15","20"],c:1,h:"60 ÷ 5.",w:"12 children."},
+ {a:"A £60 coat has 25% off. How much do you PAY?",s:"£60 with 25% off",o:["£15","£25","£35","£45"],c:3,h:"25% of 60 is 15 — but that is the discount, not the price.",w:"£60 − £15 = £45. The question asks what you pay, not what you save."}]},
+
+{n:5,wk:"Week 1 · Fractions, percentages and ratio",t:"Ratio and scaling up",
+ rule:"Find <b>one part</b> first, then multiply up. Same for recipes: work out how many times bigger the new amount is, then scale everything by that.",
+ eg:["Four parts make 24\n   1 part = 24 ÷ 4 = 6\n   5 parts = 6 × 5 = <b>30</b>","100 ml needs 60 g of fruit. For 350 ml?\n   350 ÷ 100 = 3.5 times bigger\n   60 × 3.5 = <b>210 g</b>"],
+ qs:[
+ {a:"Four equal parts make 24. What is one part worth?",s:"4 parts = 24",o:["4","6","8","12"],c:1,h:"Divide the total by the number of parts.",w:"24 ÷ 4 = 6."},
+ {a:"So what are five parts worth?",s:"1 part = 6, so 5 parts = ?",o:["11","24","30","36"],c:2,h:"Multiply one part by 5.",w:"6 × 5 = 30."},
+ {a:"100 ml of drink needs 60 g of fruit. How much fruit for 350 ml?",s:"60 g per 100 ml → 350 ml",o:["150 g","180 g","210 g","350 g"],c:2,h:"350 is 3.5 times 100. Scale the fruit by the same amount.",w:"60 × 3.5 = 210 g."},
+ {a:"Felix uses 6 tubes of glue for every 8 models. How many tubes for 20 models?",s:"6 tubes per 8 models → 20 models",o:["12","15","18","20"],c:1,h:"20 ÷ 8 = 2.5 lots. Multiply the glue by 2.5.",w:"6 × 2.5 = 15 tubes."},
+ {a:"5 miles is about 8 km. Roughly how many miles is 4 km?",s:"5 miles = 8 km, so 4 km = ?",o:["2 miles","2.5 miles","4 miles","6.4 miles"],c:1,h:"4 km is half of 8 km. So halve the miles too.",w:"Half of 5 miles = 2.5 miles."},
+ {a:"Using the same rule, how many miles is 16 km?",s:"8 km = 5 miles, so 16 km = ?",o:["8 miles","10 miles","13 miles","16 miles"],c:1,h:"16 km is double 8 km.",w:"5 × 2 = 10 miles."}]},
+
+{n:6,wk:"Week 2 · Decimals and place value",t:"Comparing and ordering decimals",
+ rule:"Pad every number with zeros so they all have the same number of digits after the point. Then read from the <b>left</b>. A longer number is not automatically a bigger number.",
+ eg:["Compare 1.06 and 1.306\n   1.060\n   1.306\n   0 vs 3 in the tenths → <b>1.306</b>","Compare 0.7 and 0.65\n   0.70 and 0.65 → <b>0.7 is bigger</b>"],
+ qs:[
+ {a:"Which is bigger?",s:"0.7   or   0.65",o:["0.7","0.65"],c:0,h:"Write 0.7 as 0.70, then compare 70 and 65.",w:"0.7 is bigger. More digits does not mean a bigger number."},
+ {a:"Which of these is the SMALLEST?",s:"1.36    1.031    1.306    1.06",o:["1.031","1.06","1.306","1.36"],c:0,h:"Pad them all to three decimal places, then compare left to right.",w:"1.031 — smallest tenths digit, then smallest hundredths."},
+ {a:"Which of the same four is the LARGEST?",s:"1.36    1.031    1.306    1.06",o:["1.031","1.06","1.306","1.36"],c:3,h:"1.36 is 1.360. Compare with 1.306.",w:"1.36, because 1.360 beats 1.306 in the hundredths column."},
+ {a:"Which is bigger?",s:"0.52   or   0.9",o:["0.52","0.9"],c:1,h:"0.9 is 0.90. Compare 90 with 52.",w:"0.9 is bigger."},
+ {a:"Which is the SMALLEST?",s:"2.05    2.5    2.15    2.1",o:["2.05","2.1","2.15","2.5"],c:0,h:"Pad to two places: 2.05, 2.50, 2.15, 2.10.",w:"2.05."},
+ {a:"Which of these amounts is the SMALLEST?",s:"48p    £0.84    408p    £4.80",o:["48p","£0.84","408p","£4.80"],c:0,h:"Put them all in pounds: £0.48, £0.84, £4.08, £4.80.",w:"48p, which is £0.48."}]},
+
+{n:7,wk:"Week 2 · Decimals and place value",t:"Adding and subtracting decimals",
+ rule:"Write the numbers with the <b>decimal points lined up</b>, one under the other. Fill any gaps with zeros. Then add or subtract column by column, as usual.",
+ eg:["  13.70\n+  8.92\n -------\n  <b>22.62</b>","  7.561\n− 2.370\n -------\n  <b>5.191</b>"],
+ qs:[
+ {a:"Work it out.",s:"13.70 + 8.92",o:["21.62","22.52","22.62","22.67"],c:2,h:"70 + 92 hundredths is 162, so write 62 and carry 1.",w:"22.62. If you got 22.67 the columns slipped — 0.70 + 0.92 is 1.62."},
+ {a:"Work it out.",s:"7.561 − 2.370",o:["4.191","5.191","5.291","9.931"],c:1,h:"This is a take-away. Line the points up and subtract each column.",w:"5.191. Getting 9.8 or 9.931 means you added instead."},
+ {a:"Work it out.",s:"£10.35 − £9.60",o:["£0.65","£0.75","£1.25","£0.85"],c:1,h:"Line up the points: 10.35 take away 9.60.",w:"£0.75."},
+ {a:"Work it out.",s:"3.4 + 0.65",o:["3.99","4.05","4.5","9.9"],c:1,h:"Write 3.4 as 3.40 first, then add.",w:"4.05."},
+ {a:"Work it out.",s:"6.2 − 1.35",o:["4.85","4.95","5.15","4.75"],c:0,h:"Write 6.2 as 6.20 first.",w:"4.85."},
+ {a:"Work it out.",s:"0.7 + 0.35",o:["0.42","1.05","0.95","1.5"],c:1,h:"0.70 + 0.35.",w:"1.05."}]},
+
+{n:8,wk:"Week 2 · Decimals and place value",t:"Rounding — and when to round UP",
+ rule:"Look at the digit <b>after</b> the place you are rounding to. 5 or more rounds up, less than 5 rounds down. But in a buying problem you always round <b>up</b>, because you cannot buy part of a box.",
+ eg:["0.126 to 1 decimal place\n   Next digit is 2, below 5\n   → <b>0.1</b>","4500 ÷ 200 = 22.5 boxes\n   You cannot buy half a box\n   → <b>23 boxes</b>"],
+ qs:[
+ {a:"Round to ONE decimal place.",s:"0.126",o:["0.1","0.13","0.2","1.3"],c:0,h:"One decimal place means one digit after the point.",w:"0.1 — the next digit is 2, which rounds down."},
+ {a:"Round to ONE decimal place.",s:"4.68",o:["4.6","4.7","4.68","5.0"],c:1,h:"The next digit is 8.",w:"4.7."},
+ {a:"Round to TWO decimal places.",s:"2.349",o:["2.34","2.35","2.4","2.3"],c:1,h:"Two digits after the point. The next digit is 9.",w:"2.35."},
+ {a:"Round to the nearest 10.",s:"736",o:["730","740","700","800"],c:1,h:"The units digit is 6.",w:"740."},
+ {a:"Which number is CLOSEST to 750?",s:"736   or   766",o:["736","766"],c:0,h:"Work out the gap for each one.",w:"736 is 14 away, 766 is 16 away. So 736."},
+ {a:"A school needs 4500 paperclips, in boxes of 200. How many boxes must they buy?",s:"4500 ÷ 200 = 22.5",o:["22","22.5","23","25"],c:2,h:"22 boxes is only 4400 paperclips. Is that enough?",w:"23. Round up — 22 leaves them short and you cannot buy half a box."}]},
+
+{n:9,wk:"Week 2 · Decimals and place value",t:"Multiplying, dividing and checking",
+ rule:"After a division, <b>check by multiplying back</b>. If it does not give the number you started with, the answer is wrong. This catches nearly every slip.",
+ eg:["74.83 ÷ 7 = 10.69\n   Check: 10.69 × 7 = <b>74.83</b> ✓","£2.70 × 8\n   2.70 × 8 = <b>£21.60</b>"],
+ qs:[
+ {a:"Work it out.",s:"74.83 ÷ 7",o:["10.49","10.59","10.69","10.79"],c:2,h:"Try multiplying each option by 7 and see which gives 74.83.",w:"10.69. Check: 10.69 × 7 = 74.83."},
+ {a:"Check this one: what is 10.59 × 7?",s:"10.59 × 7",o:["74.13","74.83","73.13","75.13"],c:0,h:"Just multiply it out.",w:"74.13 — not 74.83. That is how you know 10.59 was the wrong answer."},
+ {a:"A box of paperclips costs £2.70. What do 8 boxes cost?",s:"£2.70 × 8",o:["£16.60","£20.60","£21.06","£21.60"],c:3,h:"Do 2 × 8 and 0.70 × 8 separately if it helps.",w:"16 + 5.60 = £21.60."},
+ {a:"Work it out.",s:"£2.70 × 2",o:["£4.40","£5.40","£4.70","£5.14"],c:1,h:"Double 2.70.",w:"£5.40."},
+ {a:"Work it out.",s:"4500 ÷ 200",o:["2.25","22.5","225","45"],c:1,h:"Think of it as 45 ÷ 2.",w:"22.5."},
+ {a:"Work it out.",s:"645 ÷ 15",o:["33","41","43","45"],c:2,h:"Check by multiplying back: which option times 15 gives 645?",w:"43, because 43 × 15 = 645."}]},
+
+{n:10,wk:"Week 2 · Decimals and place value",t:"Review: fractions, percentages, decimals",
+ rule:"Mixed questions from the first two weeks. No new rules — this is a check that the methods have stuck.",
+ eg:["Fraction of an amount → ÷ bottom, × top","Percentage → find 10% first","Decimals → line up the point, pad with zeros"],
+ qs:[
+ {a:"What is 3/5 of 45?",s:"3/5 of 45",o:["9","15","27","41"],c:2,h:"÷ 5 then × 3.",w:"27."},
+ {a:"What is 80% of 300 ml?",s:"80% of 300 ml",o:["30 ml","60 ml","240 ml","280 ml"],c:2,h:"10% is 30. Eight lots of it.",w:"240 ml."},
+ {a:"Work it out.",s:"13.70 + 8.92",o:["22.52","22.62","22.67","21.62"],c:1,h:"Line up the points.",w:"22.62."},
+ {a:"Which is bigger?",s:"0.7   or   0.65",o:["0.7","0.65"],c:0,h:"0.70 against 0.65.",w:"0.7."},
+ {a:"What is 12 out of 60 as a percentage?",s:"12 out of 60",o:["12%","20%","24%","48%"],c:1,h:"12/60 simplifies to 1/5.",w:"20%."},
+ {a:"Round to one decimal place.",s:"0.126",o:["0.1","0.13","0.2","1.3"],c:0,h:"One digit after the point.",w:"0.1."}]},
+
+{n:11,wk:"Week 3 · Measures, scales and area",t:"Changing units",
+ rule:"10 mm = 1 cm · 100 cm = 1 m · 1000 m = 1 km · 1000 g = 1 kg · 1000 ml = 1 litre. Going to a <b>bigger</b> unit, divide. Going to a <b>smaller</b> unit, multiply. The number must change when the unit changes.",
+ eg:["15 cm into metres\n   100 cm = 1 m, so ÷ 100\n   15 ÷ 100 = <b>0.15 m</b>","4000 m into km\n   1000 m = 1 km, so ÷ 1000\n   4000 ÷ 1000 = <b>4 km</b>"],
+ qs:[
+ {a:"A plant grows 15 cm. Write that in metres.",s:"15 cm = ? m",o:["0.015 m","0.15 m","1.5 m","15 m"],c:1,h:"There are 100 cm in a metre, so divide by 100.",w:"0.15 m. Dividing by 100 moves every digit two places right."},
+ {a:"Zac walks 4000 m. How far is that in km?",s:"4000 m = ? km",o:["0.4 km","4 km","40 km","400 km"],c:1,h:"1000 m makes 1 km.",w:"4 km."},
+ {a:"A circle has a radius of 17 mm. What is its diameter?",s:"radius 17 mm → diameter",o:["8.5 mm","17 mm","34 mm","1.7 cm"],c:2,h:"The diameter goes all the way across, so it is twice the radius.",w:"17 × 2 = 34 mm."},
+ {a:"How many grams in 2.5 kg?",s:"2.5 kg = ? g",o:["25 g","250 g","2500 g","25000 g"],c:2,h:"1000 g in a kg, and you are going to a smaller unit, so multiply.",w:"2.5 × 1000 = 2500 g."},
+ {a:"How many litres is 1750 ml?",s:"1750 ml = ? litres",o:["0.175","1.75","17.5","175"],c:1,h:"1000 ml makes a litre, so divide by 1000.",w:"1.75 litres."},
+ {a:"There are 16 oz in 1 lb. What is 193 oz?",s:"193 ÷ 16",o:["11 lb 5 oz","12 lb 1 oz","12 lb 11 oz","13 lb 1 oz"],c:1,h:"193 ÷ 16 = 12 remainder 1.",w:"12 lb 1 oz."}]},
+
+{n:12,wk:"Week 3 · Measures, scales and area",t:"Reading scales and number lines",
+ rule:"Work out what <b>one interval</b> is worth before you read anything off. Count the gaps between two labelled numbers and divide. Never assume each mark is worth 1.",
+ eg:["From 2 to 2.25 in five gaps\n   0.25 ÷ 5 = <b>0.05 per gap</b>\n   three gaps past 2 → <b>2.15</b>","A kitten runs from 8 cm to 36 cm\n   36 − 8 = <b>28 cm</b>, not 36"],
+ qs:[
+ {a:"Each interval is worth 0.05. The arrow is three intervals past 2. What does it show?",s:"2 → three gaps of 0.05",o:["2.03","2.05","2.15","2.3"],c:2,h:"Three lots of 0.05 is 0.15. Add that to 2.",w:"2.15."},
+ {a:"A line runs from 0 to 1 with four equal gaps. What is one gap worth?",s:"0 to 1 in 4 gaps",o:["0.1","0.2","0.25","0.4"],c:2,h:"Divide 1 by the number of gaps.",w:"1 ÷ 4 = 0.25."},
+ {a:"A kitten starts at the 8 cm mark and stops at 36 cm. How long is its run?",s:"36 cm − 8 cm",o:["8 cm","28 cm","36 cm","44 cm"],c:1,h:"It did not start at zero, so subtract the starting reading.",w:"28 cm."},
+ {a:"The ruler is 100 cm long. If the kitten ran 28 cm, how much is left?",s:"100 − 28",o:["62 cm","66 cm","72 cm","82 cm"],c:2,h:"Straight subtraction.",w:"72 cm."},
+ {a:"A line runs from 0 to 50 with ten equal gaps. What is one gap worth?",s:"0 to 50 in 10 gaps",o:["0.5","5","10","25"],c:1,h:"50 ÷ 10.",w:"5."},
+ {a:"A bar chart groups times as 6-8 minutes together. Can you tell how many took between 6 and 7 minutes?",s:"bar covers 6-8 minutes",o:["Yes, it is half the bar","Yes, read the bar height","No, the bar groups them together","No, the chart is wrong"],c:2,h:"The bar lumps 6, 7 and 8 into one column.",w:"No. When a bar covers a range, you cannot pull out one part of that range."}]},
+
+{n:13,wk:"Week 3 · Measures, scales and area",t:"Area: rectangle, triangle, parallelogram",
+ rule:"Rectangle: base × height. Triangle: <b>half</b> of base × height. Parallelogram: base × the <b>perpendicular</b> height — the straight-up measurement, never the slanted side.",
+ eg:["Triangle, base 8, height 10\n   8 × 10 = 80\n   80 ÷ 2 = <b>40 square cm</b>","Parallelogram, base 5, height 2\n   5 × 2 = <b>10 square cm</b>\n   (the slanted 5 cm side is a decoy)"],
+ qs:[
+ {a:"What is the area of a rectangle 7 m by 4 m?",s:"7 × 4",o:["11 sq m","22 sq m","28 sq m","14 sq m"],c:2,h:"Base times height.",w:"28 square metres."},
+ {a:"A triangle has base 8 cm and height 10 cm. What is its area?",s:"triangle: base 8, height 10",o:["10 sq cm","18 sq cm","40 sq cm","80 sq cm"],c:2,h:"Multiply base by height, then halve it.",w:"8 × 10 = 80, then ÷ 2 = 40 square cm."},
+ {a:"A parallelogram has base 5 cm and perpendicular height 2 cm. What is its area?",s:"parallelogram: base 5, height 2",o:["7 sq cm","10 sq cm","14 sq cm","25 sq cm"],c:1,h:"Base times perpendicular height — no halving for a parallelogram.",w:"5 × 2 = 10 square cm."},
+ {a:"A triangle has base 6 cm and height 4 cm. What is its area?",s:"triangle: base 6, height 4",o:["10 sq cm","12 sq cm","24 sq cm","20 sq cm"],c:1,h:"6 × 4 = 24, then halve.",w:"12 square cm."},
+ {a:"For a parallelogram, which measurement do you use as the height?",s:"",o:["The longest side","The slanted side","The straight-up perpendicular height","Half the base"],c:2,h:"Think what turns a parallelogram into a rectangle if you push it upright.",w:"The perpendicular height — at a right angle to the base."},
+ {a:"What is the area of a square with sides of 3 cm?",s:"3 × 3",o:["6 sq cm","9 sq cm","12 sq cm","27 sq cm"],c:1,h:"A square is a rectangle with equal sides.",w:"9 square cm."}]},
+
+{n:14,wk:"Week 3 · Measures, scales and area",t:"Compound shapes, perimeter, volume",
+ rule:"For an L-shape, <b>split it into rectangles</b>, work out each area and add them. <b>Perimeter</b> is the distance all the way round the outside. <b>Volume</b> is length × width × height.",
+ eg:["L-shape = 7 × 4 and 2 × 1\n   28 + 2 = <b>30 square m</b>","Cuboid 3 × 4 × 2\n   3 × 4 = 12, × 2 = <b>24 cubic cm</b>"],
+ qs:[
+ {a:"An L-shape splits into a 7 by 4 rectangle and a 2 by 1 rectangle. Total area?",s:"(7 × 4) + (2 × 1)",o:["14 sq m","28 sq m","30 sq m","56 sq m"],c:2,h:"Work out both rectangles, then add.",w:"28 + 2 = 30 square metres."},
+ {a:"A shape has sides 8, 7, 7, 8 and 6 metres. What is its perimeter?",s:"8 + 7 + 7 + 8 + 6",o:["30 m","34 m","36 m","38 m"],c:2,h:"Perimeter means add up every side.",w:"36 m."},
+ {a:"A rectangle is 18 m by 9 m. What is its perimeter?",s:"2 × (18 + 9)",o:["27 m","54 m","81 m","162 m"],c:1,h:"Add the two different sides, then double.",w:"18 + 9 = 27, then × 2 = 54 m."},
+ {a:"What is the volume of a cube with 3 cm sides?",s:"3 × 3 × 3",o:["9 cubic cm","18 cubic cm","27 cubic cm","36 cubic cm"],c:2,h:"Multiply all three dimensions.",w:"27 cubic cm."},
+ {a:"What is the volume of a cuboid 3 by 4 by 2 cm?",s:"3 × 4 × 2",o:["9 cubic cm","18 cubic cm","24 cubic cm","30 cubic cm"],c:2,h:"3 × 4 first, then × 2.",w:"24 cubic cm."},
+ {a:"Which holds more — a 3×3×3 cube or a 3×4×2 cuboid?",s:"27  or  24",o:["The cube","The cuboid","They are the same","You cannot tell"],c:0,h:"Compare the two volumes you just worked out.",w:"The cube, at 27 cubic cm against 24."}]},
+
+{n:15,wk:"Week 3 · Measures, scales and area",t:"Review: measures, scales and area",
+ rule:"Mixed questions from this week. If any one still catches you out, do this morning again tomorrow rather than moving on.",
+ eg:["Unit change → the number must change too","Triangle → halve it. Parallelogram → do not.","Scale → work out one gap first"],
+ qs:[
+ {a:"Write 15 cm in metres.",s:"15 cm = ? m",o:["0.15 m","1.5 m","15 m","0.015 m"],c:0,h:"Divide by 100.",w:"0.15 m."},
+ {a:"A triangle has base 8 cm and height 10 cm. Area?",s:"triangle: 8 and 10",o:["18 sq cm","40 sq cm","80 sq cm","10 sq cm"],c:1,h:"Multiply then halve.",w:"40 square cm."},
+ {a:"A parallelogram has base 5 cm and perpendicular height 2 cm. Area?",s:"parallelogram: 5 and 2",o:["7 sq cm","10 sq cm","14 sq cm","20 sq cm"],c:1,h:"Base times perpendicular height.",w:"10 square cm."},
+ {a:"A kitten runs from the 8 cm mark to the 36 cm mark. How far?",s:"36 − 8",o:["8 cm","28 cm","36 cm","44 cm"],c:1,h:"Subtract the starting reading.",w:"28 cm."},
+ {a:"How far is 4000 m in kilometres?",s:"4000 m = ? km",o:["0.4 km","4 km","40 km","400 km"],c:1,h:"Divide by 1000.",w:"4 km."},
+ {a:"An L-shape splits into 7 by 4 and 2 by 1. Total area?",s:"(7 × 4) + (2 × 1)",o:["28 sq m","30 sq m","34 sq m","56 sq m"],c:1,h:"Add the two rectangles.",w:"30 square metres."}]},
+
+{n:16,wk:"Week 4 · Algebra and exam technique",t:"Algebra: writing it and working it out",
+ rule:"<b>2n</b> means 2 × n. <b>n²</b> means n × n. When you put a number in, do the squaring first, then the multiplying, then the adding.",
+ eg:["Three more than twice n\n   twice n is 2n\n   → <b>2n + 3</b>","n² + 3n, when n = 6\n   6 × 6 = 36\n   3 × 6 = 18\n   36 + 18 = <b>54</b>"],
+ qs:[
+ {a:"How do you write 'three more than twice n'?",s:"three more than twice n",o:["n + 3","2n + 3","3n + 2","2 + n3"],c:1,h:"Twice n means two lots of n. Then three more on top.",w:"2n + 3. Writing n + 3 misses the doubling completely."},
+ {a:"When n = 6, what is n² + 3n?",s:"n² + 3n,  n = 6",o:["24","36","54","90"],c:2,h:"6 × 6 first, then 3 × 6, then add them.",w:"36 + 18 = 54."},
+ {a:"If 6 × p = 42, what is p?",s:"6 × p = 42",o:["6","7","8","36"],c:1,h:"Divide 42 by 6.",w:"p = 7."},
+ {a:"When n = 4, what is 2n + 3?",s:"2n + 3,  n = 4",o:["9","11","14","24"],c:1,h:"2 × 4 first, then add 3.",w:"8 + 3 = 11."},
+ {a:"When n = 5, what is n²?",s:"n²,  n = 5",o:["10","15","25","55"],c:2,h:"n squared means n times itself.",w:"5 × 5 = 25."},
+ {a:"When n = 9, what is 2n + 1?",s:"2n + 1,  n = 9",o:["11","18","19","21"],c:2,h:"Double 9, then add 1.",w:"19."}]},
+
+{n:17,wk:"Week 4 · Algebra and exam technique",t:"Sequences, inverses, order of operations",
+ rule:"For a sequence, find the <b>step</b> between two terms. To work backwards, do the <b>opposite</b> operation, in reverse order. And in any calculation, do <b>× and ÷ before + and −</b>.",
+ eg:["427, 537, 647 …\n   step is +110\n   next: 647 + 110 = <b>757</b>","88 − 20 × 4\n   multiply first: 20 × 4 = 80\n   88 − 80 = <b>8</b>"],
+ qs:[
+ {a:"What comes next?",s:"427,  537,  647,  ?",o:["657","747","757","767"],c:2,h:"Work out the gap between 427 and 537.",w:"The step is 110, so 647 + 110 = 757."},
+ {a:"And the one after that?",s:"647,  757,  ?",o:["767","857","867","877"],c:2,h:"Add 110 again.",w:"867."},
+ {a:"Each number is double the one before. The second number is 6. What is the first?",s:"?,  6,  12,  24",o:["1","2","3","4"],c:2,h:"To undo doubling, halve it.",w:"3."},
+ {a:"I think of a number, add 25, halve it, then take away 17. I get 6. What was my number?",s:"? + 25,  ÷ 2,  − 17  =  6",o:["18","21","23","46"],c:1,h:"Undo each step in reverse: add the 17 back, then double, then take off 25.",w:"6 + 17 = 23, then 23 × 2 = 46, then 46 − 25 = 21.\nCheck forwards: 21 + 25 = 46, ÷ 2 = 23, − 17 = 6 ✓"},
+ {a:"What is the inverse (opposite) of multiplying by 5?",s:"× 5",o:["+ 5","− 5","÷ 5","× 10"],c:2,h:"Which operation undoes multiplying?",w:"Dividing by 5."},
+ {a:"Work it out.",s:"88 − 20 × 4",o:["8","68","272","352"],c:0,h:"Multiplication comes before subtraction.",w:"20 × 4 = 80, then 88 − 80 = 8. Working left to right gives 272, which is wrong."}]},
+
+{n:18,wk:"Week 4 · Algebra and exam technique",t:"Answer the question that was asked",
+ rule:"Before you write anything in the box, <b>underline what the question asks for</b>: change, left, each, total, difference, how many boxes. Then check your answer is that thing — not the step before it.",
+ eg:["Spent £18.75, paid with £20\n   £18.75 is the cost\n   change = 20 − 18.75 = <b>£1.25</b>","60 books over 4 months\n   60 is the total\n   mean = 60 ÷ 4 = <b>15</b>"],
+ qs:[
+ {a:"Corey spends £18.75 and pays with a £20 note. How much CHANGE?",s:"£20 − £18.75",o:["£1.25","£1.75","£2.25","£18.75"],c:0,h:"The £18.75 is what he spent, not what he gets back.",w:"£1.25."},
+ {a:"A shop sold 60 books over 4 months. What is the MEAN per month?",s:"60 ÷ 4",o:["4","15","24","60"],c:1,h:"Mean is the total shared out between the values.",w:"15. 60 is the total, not the mean."},
+ {a:"4500 paperclips, boxes of 200. How many boxes MUST they buy?",s:"4500 ÷ 200",o:["22","22.5","23","25"],c:2,h:"22 boxes is not quite enough.",w:"23 — round up."},
+ {a:"77 balloons are needed, sold in packs of 3. How many packs must be bought?",s:"77 ÷ 3",o:["25","25.6","26","27"],c:2,h:"77 ÷ 3 is 25 remainder 2. Those 2 still need a pack.",w:"26 packs."},
+ {a:"Zac walks 1560 m then 2440 m. How far in TOTAL, in km?",s:"1560 + 2440, then into km",o:["4 km","40 km","400 km","4000 km"],c:0,h:"Add them first, then change the unit.",w:"4000 m = 4 km. Writing 4000 answers in the wrong unit."},
+ {a:"A shop has 30 bottles and sells 21. How many are LEFT?",s:"30 − 21",o:["9","11","21","51"],c:0,h:"Take the sold ones away from the total.",w:"9."}]},
+
+{n:19,wk:"Week 4 · Algebra and exam technique",t:"Never leave a box empty",
+ rule:"An empty box scores <b>zero every time</b>. A wrong answer with working can still earn a method mark. If a question stalls you, write your working, put your best estimate in the box, and move on — then come back at the end.",
+ eg:["In the papers, 26 marks were lost to blank boxes.\nAlmost all were the last two or three questions.","Fast pass first. Anything that stalls you, skip.\nCome back with the time you have left."],
+ qs:[
+ {a:"Roughly how many boxes of 200 do you need for 4500 paperclips? Estimate first.",s:"4500 ÷ 200, roughly",o:["about 2","about 20","about 200","about 900"],c:1,h:"4500 is about 45 hundreds, and 200 is 2 hundreds.",w:"About 20 — a quick estimate tells you 23 is sensible and 225 is not."},
+ {a:"Work it out.",s:"88 − (20 × 4)",o:["8","68","272","352"],c:0,h:"The brackets tell you what to do first.",w:"88 − 80 = 8."},
+ {a:"Work it out.",s:"20 − 3 × 3",o:["11","9","51","17"],c:0,h:"Multiply before you subtract.",w:"3 × 3 = 9, then 20 − 9 = 11."},
+ {a:"Someone answers 10.59 for 74.83 ÷ 7. Is that right?",s:"10.59 × 7 = ?",o:["Yes, it checks out","No, it gives 74.13","No, it gives 75.13","You cannot check a division"],c:1,h:"Multiply the answer back by 7 and see what you get.",w:"10.59 × 7 = 74.13, so the answer was wrong. Always check backwards."},
+ {a:"Is 39 a prime number?",s:"39",o:["Yes","No, it is 3 × 13","No, it is 4 × 9","No, it is even"],c:1,h:"Try dividing it by 3.",w:"39 = 3 × 13, so it is not prime."},
+ {a:"Tick the TWO prime numbers.",s:"13    39    41    51",multi:true,o:["13","39","41","51"],c:[0,2],h:"Check each for factors. 39 = 3 × 13 and 51 = 3 × 17.",w:"13 and 41. The question said two — give two."}]},
+
+{n:20,wk:"Week 4 · Algebra and exam technique",t:"Mixed test — no reminders",
+ rule:"Do this one as if it were the real paper. Read each question twice, underline what it asks for, and put something in every box.",
+ eg:["No method card today.","Check every answer is the thing that was asked for."],
+ qs:[
+ {a:"A ring is valued at £280. Felix pays 75% of that. How much does he pay?",s:"75% of £280",o:["£70","£140","£200","£210"],c:3,h:"75% is 3/4. Divide by 4, then multiply by 3.",w:"£210."},
+ {a:"A jug holds 300 ml. 80% is lemonade. How much lemonade?",s:"80% of 300 ml",o:["30 ml","60 ml","240 ml","280 ml"],c:2,h:"10% is 30 ml.",w:"240 ml."},
+ {a:"Work it out.",s:"13.70 + 8.92",o:["21.62","22.52","22.62","22.67"],c:2,h:"Line up the decimal points.",w:"22.62."},
+ {a:"Write 15 cm in metres.",s:"15 cm = ? m",o:["0.015 m","0.15 m","1.5 m","15 m"],c:1,h:"Divide by 100.",w:"0.15 m."},
+ {a:"A triangle has base 8 cm and height 10 cm. What is its area?",s:"triangle: base 8, height 10",o:["18 sq cm","40 sq cm","80 sq cm","10 sq cm"],c:1,h:"Multiply, then halve.",w:"40 square cm."},
+ {a:"When n = 6, what is n² + 3n?",s:"n² + 3n,  n = 6",o:["24","36","54","90"],c:2,h:"36 plus 18.",w:"54."},
+ {a:"Corey spends £18.75 and pays with £20. How much change?",s:"£20 − £18.75",o:["£1.25","£1.75","£2.25","£18.75"],c:0,h:"Change is what comes back.",w:"£1.25."},
+ {a:"4500 paperclips, boxes of 200. How many boxes must be bought?",s:"4500 ÷ 200",o:["22","22.5","23","25"],c:2,h:"You cannot buy half a box, and 22 is short.",w:"23."}]}
+];
+
+/* =======================================================================
+   ENGLISH — 16 mornings. Grammar and punctuation.
+   ======================================================================= */
+const ENGLISH=[
+{n:1,wk:"Week 1 · Determiners and subjects",t:"Determiners: find the noun first",
+ rule:"A determiner sits directly in front of a noun and tells you <b>which one, whose, or how many</b>: the, a, an, my, your, his, her, our, their, this, that, some, every, both, each, numbers, and names ending in 's.",
+ eg:["Whose pencil case is it?\n   → <b>Whose</b>  (which pencil case)","Please take off your shoes.\n   → <b>your</b>  (whose shoes)"],
+ qs:[
+ {a:"Which word is the determiner?",s:"Harry took an easy exam.",o:["Harry","took","an","easy"],c:2,h:"The noun is <i>exam</i>. Look past the adjective — what is at the front of that group?",w:"<i>An</i>. The determiner comes before any adjectives."},
+ {a:"Which word is the determiner?",s:"Ron came last in every race.",o:["came","last","in","every"],c:3,h:"The noun is <i>race</i>. Which word tells you how many races?",w:"<i>Every</i>. <i>In</i> is a preposition — it tells you where, not which."},
+ {a:"Which word is the determiner?",s:"We travelled the distance between London and Dover.",o:["travelled","the","between","and"],c:1,h:"The noun is <i>distance</i>. What sits right in front of it?",w:"<i>The</i>. <i>Between</i> is a preposition."},
+ {a:"Which word is the determiner?",s:"Rory's golf ball is lime green.",o:["Rory's","golf","is","green"],c:0,h:"Whose ball is it?",w:"<i>Rory's</i>. A name with 's in front of a noun does a determiner's job."},
+ {a:"Which word is the determiner?",s:"There was an unusual squeaking sound.",o:["There","was","an","squeaking"],c:2,h:"The noun is <i>sound</i>, described by two words. What starts the group?",w:"<i>An</i> — correct because <i>unusual</i> starts with a vowel sound."},
+ {a:"Which row lists ALL the determiners?",s:"Twenty children ran through both doors into the hall.",o:["Twenty, both, the","through, the","Twenty, through, into","both, into, the"],c:0,h:"Three nouns: children, doors, hall. Check the word in front of each.",w:"<i>Twenty</i> children, <i>both</i> doors, <i>the</i> hall. Numbers count as determiners."}]},
+
+{n:2,wk:"Week 1 · Determiners and subjects",t:"a or an, and the whole noun phrase",
+ rule:"Use <b>a</b> before a consonant sound and <b>an</b> before a vowel sound. A <b>noun phrase</b> is the noun plus everything describing it — and it starts at the determiner.",
+ eg:["an apple crumble · a new jumper · an hour","Zena has a small black cat.\n   longest noun phrase = <b>a small black cat</b>"],
+ qs:[
+ {a:"a or an?",s:"For dessert we made ______ apple crumble.",o:["a","an"],c:1,h:"Say it out loud. <i>Apple</i> starts with a vowel sound.",w:"<i>An apple crumble.</i>"},
+ {a:"a or an?",s:"I hope I get ______ new jumper for Christmas.",o:["a","an"],c:0,h:"<i>New</i> starts with a consonant sound.",w:"<i>A new jumper.</i>"},
+ {a:"Tick the sentence that uses determiners correctly.",s:"",o:["We saw a elephant in Uganda.","There was a incredibly loud bang.","Lewis found a famous painting last week.","Captain Red Beard has an gigantic ship."],c:2,h:"Read each one aloud and listen for the vowel sounds.",w:"The others need <i>an elephant</i>, <i>an incredibly loud bang</i>, <i>a gigantic ship</i>."},
+ {a:"What is the longest noun phrase?",s:"In our garage, there's a brightly coloured, ultrafast sports car.",o:["sports car","ultrafast sports car","a brightly coloured, ultrafast sports car","In our garage"],c:2,h:"Start at the determiner and take everything that describes the car.",w:"Include the <i>a</i> — that is the part most people leave off."},
+ {a:"What is the longest noun phrase?",s:"Kim wants to be a famous professional gymnast one day.",o:["gymnast","famous professional gymnast","a famous professional gymnast","a famous professional gymnast one day"],c:2,h:"<i>One day</i> tells you when — that is an adverbial.",w:"<i>A famous professional gymnast.</i>"},
+ {a:"a or an?",s:"Anita found ______ old, rusty key.",o:["a","an"],c:1,h:"The next word is <i>old</i>.",w:"<i>An old, rusty key.</i> Match the sound of the word that follows, not the noun."}]},
+
+{n:3,wk:"Week 1 · Determiners and subjects",t:"The subject: who is doing it?",
+ rule:"The <b>subject</b> is who or what is doing the verb. Ask 'who did it?' before you underline anything — and include the determiner.",
+ eg:["Lydia found a beautiful necklace.\n   → <b>Lydia</b> did the finding","At 9 o'clock, the postman delivered the letters.\n   → <b>the postman</b>"],
+ qs:[
+ {a:"What is the subject?",s:"Lydia found a beautiful necklace.",o:["Lydia","found","a beautiful necklace","necklace"],c:0,h:"Who did the finding?",w:"<i>Lydia</i>. The necklace is the object — the thing it happened to."},
+ {a:"What is the subject?",s:"At 9 o'clock, the postman delivered the letters.",o:["At 9 o'clock","the postman","delivered","the letters"],c:1,h:"Ignore the part before the comma — that tells you when.",w:"<i>The postman</i>, including <i>the</i>."},
+ {a:"What is the subject?",s:"Lucy showed Meera around the school.",o:["Lucy","showed","Meera","the school"],c:0,h:"Who did the showing?",w:"<i>Lucy</i>. <i>Showed</i> is the verb and <i>Meera</i> received the action."},
+ {a:"What is the subject?",s:"Last week, I played football in the park.",o:["Last week","I","played","football"],c:1,h:"Who played?",w:"<i>I</i>. Even one letter can be the subject."},
+ {a:"What is the subject?",s:"The tired old dog barked at the postman.",o:["The tired old dog","barked","the postman","dog"],c:0,h:"Who barked? Take the whole group of words.",w:"<i>The tired old dog</i> — the full noun phrase, not just <i>dog</i>."},
+ {a:"What is the subject?",s:"Under the bridge, three noisy children were shouting.",o:["Under the bridge","three noisy children","were shouting","bridge"],c:1,h:"The opening tells you where. Who was shouting?",w:"<i>Three noisy children.</i>"}]},
+
+{n:4,wk:"Week 1 · Determiners and subjects",t:"Subject, verb, object",
+ rule:"<b>Subject</b> does the action. <b>Verb</b> is the action. <b>Object</b> receives it. Say the sentence as three parts before you answer.",
+ eg:["Lucy / showed / Meera\n   subject / verb / object","The crowd / cheered / the athletes"],
+ qs:[
+ {a:"What is the object?",s:"Mrs Patel bought a pastry.",o:["Mrs Patel","bought","a pastry","Patel"],c:2,h:"What was bought?",w:"<i>A pastry</i> — the thing the action landed on."},
+ {a:"What is the object?",s:"The crowd cheered the athletes.",o:["The crowd","cheered","the athletes","crowd"],c:2,h:"Who got cheered?",w:"<i>The athletes.</i>"},
+ {a:"What is the verb?",s:"Sam kicked the ball over the fence.",o:["Sam","kicked","the ball","the fence"],c:1,h:"Which word is the action?",w:"<i>Kicked.</i>"},
+ {a:"What is the subject?",s:"My brother plays for a local football team.",o:["My brother","plays","a local football team","football"],c:0,h:"Who plays?",w:"<i>My brother</i> — determiner included."},
+ {a:"What is the object?",s:"Zena had three cats.",o:["Zena","had","three cats","cats"],c:2,h:"What did she have?",w:"<i>Three cats</i>, with the determiner."},
+ {a:"Which row splits the sentence correctly?",s:"The gardener planted a tree.",o:["The gardener / planted / a tree","planted / The gardener / a tree","a tree / planted / The gardener","The / gardener planted / a tree"],c:0,h:"Subject first, then verb, then object.",w:"<i>The gardener</i> did it, <i>planted</i> is the action, <i>a tree</i> received it."}]},
+
+{n:5,wk:"Week 1 · Determiners and subjects",t:"Review: determiners and subjects",
+ rule:"Mixed questions from the first four mornings. No new rules — just a check that the habits have stuck.",
+ eg:["Determiner? Find the noun, look in front.","Subject? Ask who is doing it."],
+ qs:[
+ {a:"Which word is the determiner?",s:"Please take off your shoes.",o:["Please","take","off","your"],c:3,h:"The noun is <i>shoes</i>.",w:"<i>Your</i>. <i>Off</i> belongs to the verb <i>take off</i>."},
+ {a:"What is the subject?",s:"After lunch, my sister tidied her bedroom.",o:["After lunch","my sister","tidied","her bedroom"],c:1,h:"Who did the tidying?",w:"<i>My sister.</i>"},
+ {a:"Which row lists all the determiners?",s:"Every child took a packed lunch to the park.",o:["Every, a, the","took, to","Every, took, the","a, to, park"],c:0,h:"Three nouns: child, lunch, park.",w:"<i>Every</i> child, <i>a</i> packed lunch, <i>the</i> park."},
+ {a:"What is the object?",s:"The hungry cat chased a small mouse.",o:["The hungry cat","chased","a small mouse","cat"],c:2,h:"What got chased?",w:"<i>A small mouse.</i>"},
+ {a:"a or an?",s:"It took ______ hour to get there.",o:["a","an"],c:1,h:"How does <i>hour</i> start when you say it out loud?",w:"<i>An hour</i> — the h is silent, so it starts with a vowel sound."},
+ {a:"What is the longest noun phrase?",s:"She bought the last three chocolate cupcakes.",o:["cupcakes","chocolate cupcakes","the last three chocolate cupcakes","three chocolate cupcakes"],c:2,h:"Go all the way back to the determiner.",w:"<i>The last three chocolate cupcakes.</i>"}]},
+
+{n:6,wk:"Week 2 · Verbs",t:"Progressive tense: -ing with a helper",
+ rule:"<b>Present progressive</b> = am / is / are + an -ing word (happening now). <b>Past progressive</b> = was / were + an -ing word (was happening then). It always takes two words.",
+ eg:["I <b>am eating</b> a biscuit.  (now)","They <b>were playing</b> football.  (then)"],
+ qs:[
+ {a:"Complete in the present progressive.",s:"I ________ a biscuit.   (to eat)",o:["ate","am eating","have eaten","eat"],c:1,h:"Two words: am/is/are plus -ing.",w:"<i>Am eating</i>. <i>Ate</i> is simple past."},
+ {a:"Tick the pair that makes this past progressive.",s:"Julie ________ her bag whilst Felix ________ for the tickets.",o:["had packed / will look","was packing / was looking","is packing / had looked","will pack / is looking"],c:1,h:"Both halves need was/were plus -ing.",w:"<i>Was packing / was looking.</i> Anything with <i>will</i> is future."},
+ {a:"Tick the pair that makes this present progressive.",s:"The acrobats ________ carefully whilst the clowns ________ sweets.",o:["will balance / will throw","were balancing / were throwing","had balanced / had thrown","are balancing / are throwing"],c:3,h:"Present means now: am/is/are.",w:"<i>Are balancing / are throwing.</i> <i>Were</i> would make it past."},
+ {a:"Complete in the past progressive.",s:"They ________ football when it started to rain.",o:["played","were playing","have played","are playing"],c:1,h:"It was going on when something else happened.",w:"<i>Were playing.</i>"},
+ {a:"Which sentence is in the present progressive?",s:"",o:["She walks to school.","She is walking to school.","She walked to school.","She has walked to school."],c:1,h:"Look for is/am/are plus -ing.",w:"<i>She is walking.</i>"},
+ {a:"Complete in the present progressive.",s:"Right now I ________ my homework.",o:["do","did","am doing","have done"],c:2,h:"Two words, and it is happening this minute.",w:"<i>Am doing.</i>"}]},
+
+{n:7,wk:"Week 2 · Verbs",t:"Perfect tenses: has, have, had",
+ rule:"<b>Present perfect</b> = has / have + past participle. <b>Past perfect</b> = had + past participle, for something that happened <i>before</i> another past event.",
+ eg:["I <b>have told</b> him the truth.","She <b>had told</b> her dad before she went.\n   (told first, went after)"],
+ qs:[
+ {a:"Complete the sentence.",s:"Louise ________ told her dad she was going, so he wasn't surprised when she went.",o:["has","had","have","was"],c:1,h:"The telling came before the going. Two past events need <i>had</i> on the earlier one.",w:"<i>Had told</i> — the past perfect."},
+ {a:"Circle the correct present perfect form.",s:"The hen ( has gone / went ) into the barn.",o:["has gone","went"],c:0,h:"Present perfect always has has/have in front.",w:"<i>Has gone.</i>"},
+ {a:"Tick the TWO sentences that correctly use the present perfect.",s:"",multi:true,o:["Amy bought some bread.","I have told him the truth.","Kimberly has breaked a window.","A flea has bitten my dog."],c:[1,3],h:"Two things to check: is there a has/have, and is the participle a real word?",w:"<i>Breaked</i> should be <i>broken</i>; <i>Amy bought</i> is simple past. The question said two — give two."},
+ {a:"Circle the present perfect form.",s:"Anita ( has seen / saw ) the film.",o:["has seen","saw"],c:0,h:"Which one has a helper verb?",w:"<i>Has seen.</i>"},
+ {a:"Circle the present perfect form.",s:"The boys ( were / have been ) on time all week.",o:["were","have been"],c:1,h:"<i>All week</i> means it has carried on up to now.",w:"<i>Have been.</i>"},
+ {a:"Complete the sentence.",s:"By the time we arrived, the film ________ started.",o:["has","had","have","was"],c:1,h:"Which happened first — the film starting, or arriving?",w:"<i>Had started</i>, because it happened before they arrived."}]},
+
+{n:8,wk:"Week 2 · Verbs",t:"Irregular past verbs",
+ rule:"Most verbs add -ed. A handful change completely, and there is no rule — you have to know them. Say the sentence out loud; the wrong one usually sounds odd.",
+ eg:["fly → flew → have flown","catch → caught → have caught"],
+ qs:[
+ {a:"Change to the past tense.",s:"The Johnsons FLY to Nepal on Saturday.",o:["flyed","flew","flown","flied"],c:1,h:"Yesterday they…?",w:"<i>Flew</i>. <i>Flown</i> only works after has or have."},
+ {a:"Complete the sentence.",s:"Kimberly has ________ a window.",o:["breaked","broke","broken","breaks"],c:2,h:"After <i>has</i> you need the participle, not the plain past.",w:"<i>Has broken.</i>"},
+ {a:"Complete the sentence.",s:"The hen has ________ into the barn.",o:["went","gone","goed","going"],c:1,h:"You would say 'she went', but after <i>has</i> it changes again.",w:"<i>Has gone.</i>"},
+ {a:"Change to the past tense.",s:"I BUY football stickers every week.",o:["buyed","buied","bought","boughted"],c:2,h:"It does not take -ed at all.",w:"<i>Bought.</i>"},
+ {a:"Change to the past tense.",s:"I KEEP them in a folder.",o:["keeped","kept","keept","kepped"],c:1,h:"Short and irregular.",w:"<i>Kept.</i>"},
+ {a:"Change to the past tense.",s:"He SWIMS at the pool on Fridays.",o:["swimmed","swum","swam","swimed"],c:2,h:"Yesterday he…? <i>Swum</i> needs has or have.",w:"<i>Swam.</i>"}]},
+
+{n:9,wk:"Week 2 · Verbs",t:"Active and passive",
+ rule:"<b>Active</b>: the subject does the action. <b>Passive</b>: the subject receives it. The giveaway for passive is <b>was / were</b> plus a past participle, often followed by <b>by</b>.",
+ eg:["The boy kicked the ball.  → active","The ball <b>was kicked by</b> the boy.  → passive"],
+ qs:[
+ {a:"Active or passive?",s:"I can grow fruit and vegetables.",o:["Active","Passive"],c:0,h:"Is the person doing it at the front?",w:"Active — <i>I</i> do the growing and <i>I</i> is the subject."},
+ {a:"Active or passive?",s:"We were shown round by the tour guide.",o:["Active","Passive"],c:1,h:"Spot the <i>were … by</i> pattern.",w:"Passive — the guide did it, but <i>we</i> is at the front receiving it."},
+ {a:"Active or passive?",s:"The crowd cheered the athletes.",o:["Active","Passive"],c:0,h:"Who is doing the cheering?",w:"Active. The passive would be: the athletes were cheered by the crowd."},
+ {a:"Active or passive?",s:"The hospital was opened by the mayor.",o:["Active","Passive"],c:1,h:"was … by.",w:"Passive."},
+ {a:"Which is the correct passive version?",s:"The children ignored the alarm.",o:["The children were ignored by the alarm.","The alarm was ignored by the children.","The alarm ignored the children.","The alarm has ignored the children."],c:1,h:"Move the thing being acted on to the front, add was/were, then by.",w:"<i>The alarm was ignored by the children.</i>"},
+ {a:"Tick the TWO passive sentences.",s:"",multi:true,o:["Mickey burnt the cakes.","Our decision was made.","The prisoner was captured.","I practise playing the guitar."],c:[1,2],h:"Two of them have <i>was</i> plus a participle and no doer at the front.",w:"Both <i>was made</i> and <i>was captured</i>. The word <i>sentences</i> is plural — your clue to find more than one."}]},
+
+{n:10,wk:"Week 2 · Verbs",t:"Review: all the verb forms",
+ rule:"Mixed verbs from this week. If one still catches you out, redo that morning tomorrow instead of moving on.",
+ eg:["I eat / I am eating / I ate / I have eaten / I had eaten","Each one changes when it happened."],
+ qs:[
+ {a:"Which is the present perfect?",s:"",o:["I eat toast.","I am eating toast.","I ate toast.","I have eaten toast."],c:3,h:"has or have plus a participle.",w:"<i>I have eaten toast.</i>"},
+ {a:"Complete in the past progressive.",s:"She ________ her book when the phone rang.",o:["read","was reading","has read","reads"],c:1,h:"It was in progress when something interrupted.",w:"<i>Was reading.</i>"},
+ {a:"Change to the past tense.",s:"The children RUN to the gate.",o:["runned","ran","run","have run"],c:1,h:"Irregular.",w:"<i>Ran.</i>"},
+ {a:"Active or passive?",s:"My sandwich was eaten by the dog.",o:["Active","Passive"],c:1,h:"was … by.",w:"Passive."},
+ {a:"Complete the sentence.",s:"By six o'clock, everyone ________ left.",o:["has","had","have","was"],c:1,h:"It happened before six.",w:"<i>Had left.</i>"},
+ {a:"Which sentence uses the present progressive?",s:"",o:["He plays chess.","He is playing chess.","He played chess.","He had played chess."],c:1,h:"is + -ing.",w:"<i>He is playing chess.</i>"}]},
+
+{n:11,wk:"Week 3 · Words, clauses and punctuation",t:"Mark the word, not the whole clause",
+ rule:"When a question says circle or underline a <b>conjunction</b>, it wants the one joining word — not the part it introduces. Co-ordinating: and, but, or, so. Subordinating: although, because, while, unless, after, if, when.",
+ eg:["Patrick is good at cricket <b>and</b> tennis <b>although</b> he doesn't play often.","Circle <b>and</b>. Underline <b>although</b>. Nothing else."],
+ qs:[
+ {a:"Which word is the co-ordinating conjunction?",s:"Patrick is good at cricket and tennis although he doesn't play very often.",o:["and","although","Patrick","doesn't"],c:0,h:"There are only a few: and, but, or, so, for, nor, yet.",w:"<i>And</i> — one word, not the phrase after it."},
+ {a:"Which word is the subordinating conjunction?",s:"Patrick is good at cricket and tennis although he doesn't play very often.",o:["and","although","tennis","play"],c:1,h:"It starts a part that could not stand alone as a sentence.",w:"<i>Although.</i>"},
+ {a:"Which word is the conjunction?",s:"We went outside after it had stopped raining.",o:["went","after","had","stopped"],c:1,h:"Which word joins the two halves?",w:"<i>After</i>. <i>Had</i> is a helper verb."},
+ {a:"Which is the adverbial phrase?",s:"A new teacher joined our school this term.",o:["A new teacher","joined","our school","this term"],c:3,h:"An adverbial answers when, where, how or why — never who.",w:"<i>This term</i>. <i>A new teacher</i> is the subject."},
+ {a:"Which word is the conjunction?",s:"I'm not going to the party unless Naomi comes with me.",o:["going","party","unless","comes"],c:2,h:"Which word sets a condition?",w:"<i>Unless.</i>"},
+ {a:"Tick the TWO co-ordinating conjunctions.",s:"The wedding was in a church, and started at two, but the reception was at a hotel.",multi:true,o:["and","was","but","at"],c:[0,2],h:"Two joining words, each linking equal parts.",w:"<i>And</i> and <i>but</i>."}]},
+
+{n:12,wk:"Week 3 · Words, clauses and punctuation",t:"Relative pronouns and relative clauses",
+ rule:"A <b>relative pronoun</b> — who, which, that, whose, whom — starts a clause that tells you more about a noun. That whole chunk is a <b>relative clause</b>. Words like her, our and my are not relative pronouns; they just show ownership.",
+ eg:["The woman, <b>who</b> was very tall, forgot her screwdriver.","Brighton, <b>which is on the south coast</b>, is lovely.\n   ← relative clause"],
+ qs:[
+ {a:"Tick the TWO relative pronouns.",s:"The woman, who was very tall, had forgotten her screwdriver, which meant she couldn't hang up our pictures.",multi:true,o:["who","her","which","our"],c:[0,2],h:"Which two start extra information about a noun?",w:"<i>Who</i> and <i>which</i>. <i>Her</i> and <i>our</i> are possessive determiners."},
+ {a:"'which is on the south coast' is an example of what?",s:"Brighton, which is on the south coast, is a lovely place.",o:["a conjunction","a main clause","a relative clause","a noun phrase"],c:2,h:"It starts with a relative pronoun and describes Brighton.",w:"A relative clause. A conjunction is a single word, not a whole chunk."},
+ {a:"Which words are the relative clause?",s:"Amar met Laura, who is now his best friend, last July.",o:["Amar met Laura","who is now his best friend","last July","his best friend"],c:1,h:"It sits between the commas and starts with a relative pronoun.",w:"<i>Who is now his best friend.</i>"},
+ {a:"Is the capitalised part a main clause or a subordinate clause?",s:"Ryan, WHO'S MY COUSIN, loves popcorn.",o:["Main clause","Subordinate clause"],c:1,h:"Could it stand alone as a sentence on its own?",w:"Subordinate — a relative clause is a type of subordinate clause."},
+ {a:"Which relative pronoun fits best?",s:"I'm so pleased for the team ________ won the tournament.",o:["whom","when","whose","that"],c:3,h:"You could also use <i>which</i> here — which option means the same?",w:"<i>That</i>. <i>Whose</i> means belonging to; <i>when</i> is about time."},
+ {a:"Which word is the relative pronoun?",s:"The cloud, which was dark grey, was directly above Fred.",o:["The","which","was","above"],c:1,h:"Which word introduces the extra information?",w:"<i>Which.</i>"}]},
+
+{n:13,wk:"Week 3 · Words, clauses and punctuation",t:"Speech marks and brackets",
+ rule:"Speech marks open <b>and</b> close — every opening one needs its partner. Punctuation for the spoken words goes <i>inside</i>. Brackets and dashes also come in pairs: take the bracketed bit out and the sentence must still work.",
+ eg:["The teacher asked his pupils, <b>“</b>Is Marcus ill today?<b>”</b>","Mr Hargreaves <b>(</b>our history teacher<b>)</b> rides a motorbike."],
+ qs:[
+ {a:"Which version is punctuated correctly?",s:"The teacher asked his pupils Is Marcus ill today",o:["The teacher asked his pupils, Is Marcus ill today?","The teacher asked his pupils, “Is Marcus ill today?”","“The teacher asked his pupils, Is Marcus ill today.”","The teacher asked his pupils “Is Marcus ill today”"],c:1,h:"Comma before the speech starts, question mark inside, closing marks after.",w:"Four things needed: comma, open, question mark, close."},
+ {a:"Where do the brackets go?",s:"Mr Hargreaves our history teacher rides a motorbike to school.",o:["Mr Hargreaves (our history teacher rides a motorbike to school).","Mr Hargreaves (our history teacher) rides a motorbike to school.","(Mr Hargreaves our history teacher) rides a motorbike to school.","Mr Hargreaves our history teacher (rides a motorbike to school)."],c:1,h:"Cover the bracketed bit — does what is left still make sense?",w:"<i>Mr Hargreaves rides a motorbike to school</i> still works."},
+ {a:"Where do the brackets go?",s:"My dress the red one has got a stain on it.",o:["(My dress the red one) has got a stain on it.","My dress (the red one has got a stain on it).","My dress (the red one) has got a stain on it.","My dress the red one (has got a stain on it)."],c:2,h:"Which bit is the extra detail you could remove?",w:"<i>The red one</i> is the extra information."},
+ {a:"Which version is punctuated correctly?",s:"What were you thinking asked the chef You can't make meringue with lavender",o:["“What were you thinking? asked the chef. You can't make meringue with lavender!”","“What were you thinking?” asked the chef. “You can't make meringue with lavender!”","What were you thinking? “asked the chef” You can't make meringue with lavender!","“What were you thinking? asked the chef, You can't make meringue with lavender!”"],c:1,h:"There are two separate bits of speech. Each needs its own pair of marks.",w:"Two pairs — four marks in total."},
+ {a:"Which is the correct direct speech version?",s:"The doctor said I should get plenty of rest.",o:["“You should get plenty of rest,” said the doctor.","“You should get plenty of rest” said the doctor.","You should get plenty of rest, “said the doctor.”","“You should get plenty of rest.” Said the doctor."],c:0,h:"A comma goes before the closing speech mark when the sentence carries on.",w:"Comma inside, then <i>said the doctor</i> with a full stop."},
+ {a:"Which sentence uses dashes correctly?",s:"",o:["My new — dog — a golden retriever is called Rover.","My new dog — a golden retriever — is called Rover.","My new dog a golden retriever — is called Rover.","My new dog — a golden retriever is called Rover."],c:1,h:"A matched pair around the extra information.",w:"Take out <i>a golden retriever</i> and the sentence still works."}]},
+
+{n:14,wk:"Week 3 · Words, clauses and punctuation",t:"Commas, hyphens, colons, semi-colons",
+ rule:"<b>Comma</b>: separates items or fences off extra information. <b>Hyphen</b>: joins two words working as one description. <b>Colon</b>: the second part explains the first. <b>Semi-colon</b>: joins two complete sentences.",
+ eg:["a big, red and shiny car · a last-minute holiday","She was late; the bus never came."],
+ qs:[
+ {a:"Where does the comma go?",s:"Ralph has just bought a big red and shiny car.",o:["after just","after bought","after big","after and"],c:2,h:"Three adjectives in a list: big, red, shiny.",w:"After <i>big</i>. The last two are joined by <i>and</i>, so no comma there."},
+ {a:"Where do the two commas go?",s:"My mum who is a great baker owns the cake shop in town.",o:["after mum and after baker","after mum and after shop","after who and after baker","after great and after baker"],c:0,h:"Fence off the extra information about your mum.",w:"After <i>mum</i> and after <i>baker</i> — a pair, like brackets."},
+ {a:"Where does the hyphen go?",s:"Swimmers ran out of the water due to a man eating shark.",o:["between due and to","between a and man","between man and eating","between eating and shark"],c:2,h:"Two words working together to describe the shark.",w:"<i>Man-eating</i>. Without it, a man is eating a shark."},
+ {a:"Where does the hyphen go?",s:"We booked an incredible last minute holiday to Lanzarote.",o:["between an and incredible","between incredible and last","between last and minute","between minute and holiday"],c:2,h:"Which two words describe the holiday as one idea?",w:"<i>Last-minute.</i>"},
+ {a:"Where does the colon go?",s:"The teddy bear was very old it had belonged to Sara's mother.",o:["after teddy","after old","after belonged","after Sara's"],c:1,h:"Where does the explanation start?",w:"After <i>old</i> — the second part explains why."},
+ {a:"Where does the semi-colon go?",s:"Marie is in hospital she's having an operation.",o:["after Marie","after hospital","after she's","after having"],c:1,h:"It joins two complete sentences. Where does the first one end?",w:"After <i>hospital</i>."}]},
+
+{n:15,wk:"Week 3 · Words, clauses and punctuation",t:"Word families, prefixes and opposites",
+ rule:"A <b>prefix</b> goes on the front, a <b>suffix</b> on the end. A <b>word family</b> shares a root. A <b>synonym</b> means the same; an <b>antonym</b> means the opposite.",
+ eg:["cheer → cheerful (adjective) → cheerfully (adverb)","possible → impossible · helpful → unhelpful · sane → insane"],
+ qs:[
+ {a:"Which is an adjective made by adding a suffix to 'cheer'?",s:"",o:["cheerfully","cheers","cheerful","cheerer"],c:2,h:"An adjective describes: a ______ face.",w:"<i>Cheerful</i>. <i>Cheerer</i> is not a word."},
+ {a:"Which prefix makes the opposite of 'possible'?",s:"",o:["un–","in–","im–","dis–"],c:2,h:"Say each aloud — which sounds like a real word?",w:"<i>Impossible</i>. <i>Im–</i> is used before m and p."},
+ {a:"Tick the words that are antonyms for 'open'.",s:"",o:["easy, simple","shut, blocked","clear, accessible","imprisoned, captive"],c:1,h:"Antonym means opposite.",w:"<i>Shut, blocked</i>. <i>Clear</i> and <i>accessible</i> are synonyms of open."},
+ {a:"Which word belongs to the family of literature, illiterate, alliteration?",s:"",o:["literate","litter","liberate","litre"],c:0,h:"They share the root <i>liter</i>, to do with letters.",w:"<i>Literate</i> — able to read."},
+ {a:"Complete with an adjective formed from 'critic'.",s:"Mr Barnes is a ________ teacher who's always telling us off.",o:["criticise","critical","critically","criticism"],c:1,h:"You need a word that describes the teacher.",w:"<i>Critical.</i>"},
+ {a:"What does the root 'cent' mean in century, percentage, centipede?",s:"",o:["smell","hundred","part","insect"],c:1,h:"How many years in a century?",w:"<i>Hundred.</i>"}]},
+
+{n:16,wk:"Week 4 · Test yourself",t:"Mixed test: everything so far",
+ rule:"No reminders this time — do this one as if it were the real paper. Read each instruction twice and count your answers before pressing Check.",
+ eg:["Does it say one, two, all or each?","Have I marked only what was asked for?"],
+ qs:[
+ {a:"Which option makes this subjunctive?",s:"It is essential that he ________ the plant each day.",o:["waters","water","watering","watered"],c:1,h:"After <i>it is essential that</i>, the verb drops its -s.",w:"<i>Water.</i> It sounds wrong at first — that is how you spot the subjunctive."},
+ {a:"Which option makes this subjunctive?",s:"If I ________ a bit taller, I could reach the top shelf.",o:["was","could be","were","would be"],c:2,h:"In an imaginary <i>if</i> sentence it is always <i>were</i>.",w:"<i>Were</i> — like 'If I were you'."},
+ {a:"Tick the TWO grammatically correct sentences.",s:"",multi:true,o:["Remember to buy a ticket before you got on the train.","I bought a hat, but I didn't bought a dress.","We cooked curry for tea, and we baked a cake for dessert.","They will tell us a story, and we will listen carefully."],c:[2,3],h:"Sentence 1: <i>got</i> or <i>get</i>? Sentence 2: after <i>didn't</i>, is it <i>bought</i> or <i>buy</i>?",w:"3 and 4. Trust your first choice — do not rub out a right answer."},
+ {a:"Which pair are the adverbs?",s:"1. Sasha will probably teach you to paint.\n2. The biscuits will run out soon.",o:["probably only","probably and soon","will and soon","teach and run"],c:1,h:"'In each sentence' means every sentence has one.",w:"<i>Probably</i> and <i>soon</i>. Count your answers against the instruction."},
+ {a:"Which word is the determiner?",s:"Please take off your shoes.",o:["Please","take","off","your"],c:3,h:"Find the noun, then look in front of it.",w:"<i>Your.</i>"},
+ {a:"What is the subject?",s:"At 9 o'clock, the postman delivered the letters.",o:["At 9 o'clock","the postman","delivered","the letters"],c:1,h:"Who did the delivering?",w:"<i>The postman.</i>"},
+ {a:"Active or passive?",s:"We were shown round by the tour guide.",o:["Active","Passive"],c:1,h:"were … by.",w:"Passive."},
+ {a:"Tick the TWO present perfect sentences.",s:"",multi:true,o:["Amy bought some bread.","I have told him the truth.","Kimberly has breaked a window.","A flea has bitten my dog."],c:[1,3],h:"has/have plus a real participle.",w:"<i>Have told</i> and <i>has bitten</i>."}]}
+];
+
+/* =======================================================================
+   APP
+   ======================================================================= */
+const SUBJECTS={
+  maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
+  english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
+};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[]};
+let DB=JSON.parse(JSON.stringify(DEFAULTS));
+let SUB="maths";
+
+/* run state */
+let S=null, qi=0, sel=[], answered=false, tries=0, picks=[], got=0;
+let t0=null, tick=null, qt0=null, unlocked=false;
+
+const el=id=>document.getElementById(id);
+const show=id=>{["home","brief","quiz","done","parent"].forEach(k=>el(k).hidden=(k!==id));window.scrollTo(0,0)};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const mmss=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
+const today=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+
+function paint(){
+  const s=SUBJECTS[SUB];
+  document.documentElement.style.setProperty("--accent",s.accent);
+  document.documentElement.style.setProperty("--accent-soft",s.soft);
+}
+
+/* Works both inside Claude (window.storage) and on any web host (localStorage) */
+const STORE=(()=>{
+  const native = typeof window!=="undefined" && window.storage && typeof window.storage.get==="function";
+  return {
+    async get(k){
+      if(native) return await window.storage.get(k,false);
+      const v=localStorage.getItem(k);
+      return v==null?null:{key:k,value:v};
+    },
+    async set(k,v){
+      if(native) return await window.storage.set(k,v,false);
+      localStorage.setItem(k,v);
+      return {key:k,value:v};
+    }
+  };
+})();
+
+async function load(){
+  try{
+    const r=await STORE.get("drill-data");
+    if(r&&r.value) DB=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(r.value));
+  }catch(e){}
+}
+async function save(){
+  try{
+    DB.sessions=DB.sessions.slice(-200);
+    DB.errors=DB.errors.slice(-400);
+    await STORE.set("drill-data",JSON.stringify(DB));
+  }catch(e){}
+}
+
+/* ------------------------------- HOME -------------------------------- */
+function home(){
+  paint();
+  const s=SUBJECTS[SUB], best=DB.best[SUB]||{};
+  const doneN=Object.keys(best).length;
+  let out=`<div class="card">
+    <h1>Morning practice</h1>
+    <p class="sub">Ten minutes a day. Pick today's card, read the method together, then six questions. Nothing moves on until the answer is right.</p>
+    <div class="tabs">
+      ${Object.values(SUBJECTS).map(x=>`<button class="tab ${x.cls} ${x.key===SUB?"on":""}" data-sub="${x.key}">
+        ${x.name}<span class="c">${Object.keys(DB.best[x.key]||{}).length} of ${x.days.length} done</span></button>`).join("")}
+    </div>
+    <p class="sub" style="margin:0">${doneN?`${doneN} ${s.name.toLowerCase()} mornings finished. Everything is saved.`:`Start with Day 1.`}</p>
+  </div>`;
+
+  let wk="";
+  s.days.forEach((d,n)=>{
+    if(d.wk!==wk){ if(wk) out+="</div>"; wk=d.wk; out+=`<div class="week">${wk}</div><div class="days">`; }
+    const b=best[n];
+    out+=`<button class="day ${b!=null?"done":""}" data-i="${n}">
+      ${b!=null?`<span class="star">${b}/${d.qs.length}</span>`:""}
+      <span class="n">Day ${d.n}</span><span class="t">${d.t}</span></button>`;
+  });
+  out+="</div>";
+  out+=`<div class="foot"><button class="link" id="toParent">Parent area</button></div>`;
+
+  el("home").innerHTML=out;
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{SUB=b.dataset.sub;home()});
+  document.querySelectorAll(".day").forEach(b=>b.onclick=()=>brief(+b.dataset.i));
+  el("toParent").onclick=parentGate;
+  show("home");
+}
+
+/* ------------------------------ BRIEF -------------------------------- */
+function brief(n){
+  const s=SUBJECTS[SUB]; const d=s.days[n];
+  S={sub:SUB,i:n,d:d};
+  el("brief").innerHTML=`<div class="card">
+    <h1>Day ${d.n}</h1><h2>${d.t}</h2>
+    <div class="rule"><h3>The method</h3><p style="font-size:.95rem;margin-top:6px">${d.rule}</p>
+      ${d.eg.map(e=>`<div class="eg">${e}</div>`).join("")}</div>
+    <p class="sub">Read the method and both examples together first — that is the part that teaches. Then six questions, about a minute each.</p>
+    <div class="actions"><button class="btn" id="start">Start the questions</button>
+      <button class="btn ghost" id="back">Back</button></div>
+  </div>`;
+  el("start").onclick=begin;
+  el("back").onclick=home;
+  show("brief");
+}
+
+/* ------------------------------- QUIZ -------------------------------- */
+function begin(){
+  qi=0;got=0;t0=Date.now();
+  clearInterval(tick); tick=setInterval(clock,1000);
+  render();show("quiz");
+}
+function clock(){
+  const c=el("cl"); if(!c) return;
+  const left=DB.mins*60-Math.floor((Date.now()-t0)/1000);
+  if(left>=0){ c.textContent=mmss(left); c.className="timer"+(left<=60?" low":""); }
+  else { c.textContent="Time's up"; c.className="timer up"; }
+}
+function render(){
+  const q=S.d.qs[qi]; sel=[];answered=false;tries=0;picks=[];qt0=Date.now();
+  const numeric=SUBJECTS[S.sub].numeric;
+  el("quiz").innerHTML=`<div class="card">
+    <div class="bar-row">
+      <div class="track"><i style="width:${qi/S.d.qs.length*100}%"></i></div>
+      <div class="count">${qi+1}/${S.d.qs.length}</div>
+      <div class="timer" id="cl">${mmss(DB.mins*60)}</div>
+    </div>
+    <p class="ask">${q.a}</p>
+    <p class="instr">${q.multi?"Tick <b>two</b> boxes.":"Tick <b>one</b> box."}</p>
+    ${q.s?`<div class="stem ${numeric?"m":""}">${q.s}</div>`:""}
+    <div class="opts" id="opts">${q.o.map((o,n)=>
+      `<button class="opt" data-n="${n}"><span class="box"></span><span class="v ${numeric?"num":""}">${o}</span></button>`).join("")}</div>
+    <div id="msg"></div>
+    <div class="actions"><button class="btn" id="primary" disabled>Check answer</button>
+      <button class="btn ghost sm" id="stop">Stop</button></div>
+  </div>`;
+  [...el("opts").children].forEach(b=>b.onclick=()=>pick(+b.dataset.n));
+  el("primary").onclick=submit;
+  el("stop").onclick=()=>{clearInterval(tick);home()};
+  clock();
+}
+function pick(n){
+  if(answered) return;
+  const q=S.d.qs[qi];
+  if(q.multi){ const at=sel.indexOf(n); if(at>-1) sel.splice(at,1); else if(sel.length<2) sel.push(n); }
+  else sel=[n];
+  [...el("opts").children].forEach(b=>{
+    const on=sel.includes(+b.dataset.n);
+    b.classList.toggle("sel",on);
+    b.querySelector(".box").textContent=on?"✓":"";
+  });
+  el("primary").disabled = q.multi ? sel.length!==2 : sel.length!==1;
+}
+function submit(){
+  const q=S.d.qs[qi];
+  if(answered){ qi++; if(qi>=S.d.qs.length) finish(); else render(); return; }
+  const want=q.multi?[...q.c].sort().join():String(q.c);
+  const have=q.multi?[...sel].sort().join():String(sel[0]);
+  const chosen=sel.map(n=>q.o[n]).join(" + ");
+
+  if(want===have){
+    answered=true;
+    if(tries===0) got++;
+    else logError(q,picks,tries);
+    [...el("opts").children].forEach(b=>{b.disabled=true;if(sel.includes(+b.dataset.n))b.classList.add("right")});
+    el("msg").innerHTML=`<div class="msg yes"><b>${tries===0?"Correct — first go":"Correct now"}</b>
+      <div class="work">${q.w}</div></div>`;
+    el("primary").textContent = qi===S.d.qs.length-1?"Finish":"Next question";
+    el("primary").disabled=false;
+  } else {
+    tries++; picks.push(chosen);
+    [...el("opts").children].forEach(b=>{if(sel.includes(+b.dataset.n)){b.classList.add("wrong");b.querySelector(".box").textContent="✕"}});
+    el("msg").innerHTML=`<div class="msg no"><b>Not that one — have another go</b>${q.h}</div>`;
+    setTimeout(()=>{
+      sel=[];
+      [...el("opts").children].forEach(b=>{b.classList.remove("wrong","sel");b.querySelector(".box").textContent=""});
+      el("primary").disabled=true;
+    },1500);
+  }
+}
+function logError(q,picks,tries){
+  DB.errors.push({
+    sub:S.sub, day:S.d.n, dayTitle:S.d.t, topic:S.d.wk,
+    q:q.a, stem:q.s||"", correct:q.multi?q.c.map(i=>q.o[i]).join(" + "):q.o[q.c],
+    picks:picks.slice(), tries:tries,
+    secs:Math.round((Date.now()-qt0)/1000), date:today()
+  });
+}
+
+/* ------------------------------ RESULT ------------------------------- */
+async function finish(){
+  clearInterval(tick);
+  const total=S.d.qs.length, secs=Math.round((Date.now()-t0)/1000);
+  const b=DB.best[S.sub];
+  if(b[S.i]==null||got>b[S.i]) b[S.i]=got;
+  DB.sessions.push({sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,date:today()});
+  await save();
+
+  let verdict;
+  if(got===total) verdict="Every one right first time. Move on tomorrow.";
+  else if(got>=total-1) verdict="Nearly clean. Move on tomorrow, and come back to this one at the weekend.";
+  else if(got>=total/2) verdict="Halfway. Do this same day again tomorrow before moving on.";
+  else verdict="This one needs a second morning. Read the method again together, then repeat this day tomorrow.";
+
+  const over = secs>DB.mins*60;
+  const nxt=SUBJECTS[S.sub].days[S.i+1];
+  el("done").innerHTML=`<div class="card">
+    <h1>Day ${S.d.n} finished</h1>
+    <div style="margin:16px 0 4px"><span class="score">${got}/${total}</span><small>right first time</small></div>
+    <div><span class="pill">${mmss(secs)} taken</span>${over?`<span class="pill">over the ${DB.mins} minutes</span>`:`<span class="pill">inside the ${DB.mins} minutes</span>`}</div>
+    <div class="rule" style="margin-top:16px"><p style="font-size:.95rem">${verdict}</p></div>
+    <div class="actions">
+      ${nxt?`<button class="btn" id="next">Tomorrow: Day ${nxt.n}</button>`:""}
+      <button class="btn ghost" id="again">Redo Day ${S.d.n}</button>
+      <button class="btn ghost" id="menu">All days</button></div>
+  </div>`;
+  if(nxt) el("next").onclick=()=>brief(S.i+1);
+  el("again").onclick=()=>brief(S.i);
+  el("menu").onclick=home;
+  show("done");
+}
+
+/* ------------------------- PARENT AREA ------------------------------- */
+function parentGate(){
+  if(unlocked) return parentArea();
+  el("parent").innerHTML=`<div class="card">
+    <h1>Parent area</h1>
+    <p class="sub">Enter your PIN to see results, timings and the wrong-answer log.</p>
+    <div style="margin:18px 0"><input type="password" id="pin" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="PIN"></div>
+    <div id="pinmsg"></div>
+    <div class="actions"><button class="btn" id="go">Unlock</button>
+      <button class="btn ghost" id="back">Back</button></div>
+    <p class="sub" style="margin-top:16px">The PIN starts as <b>1234</b>. You can change it once you are in.</p>
+  </div>`;
+  const inp=el("pin"); inp.focus();
+  const go=()=>{
+    if(inp.value===DB.pin){ unlocked=true; parentArea(); }
+    else { el("pinmsg").innerHTML=`<div class="msg no"><b>Wrong PIN</b>Try again.</div>`; inp.value=""; inp.focus(); }
+  };
+  el("go").onclick=go;
+  inp.onkeydown=e=>{if(e.key==="Enter")go()};
+  el("back").onclick=home;
+  show("parent");
+}
+
+function parentArea(){
+  const sess=DB.sessions.slice().reverse();
+  const totalSecs=DB.sessions.reduce((a,x)=>a+x.secs,0);
+  const allBest=[...Object.entries(DB.best.maths),...Object.entries(DB.best.english)];
+  const doneM=Object.keys(DB.best.maths).length, doneE=Object.keys(DB.best.english).length;
+  const avg=DB.sessions.length
+    ? Math.round(100*DB.sessions.reduce((a,x)=>a+x.score/x.total,0)/DB.sessions.length) : 0;
+
+  /* group errors by topic */
+  const byTopic={};
+  DB.errors.forEach(e=>{
+    const k=SUBJECTS[e.sub].name+" · "+e.topic;
+    byTopic[k]=byTopic[k]||{n:0,tries:0};
+    byTopic[k].n++; byTopic[k].tries+=e.tries;
+  });
+  const topics=Object.entries(byTopic).sort((a,b)=>b[1].tries-a[1].tries);
+
+  el("parent").innerHTML=`<div class="card">
+    <h1>Parent area</h1>
+    <div class="stat">
+      <div><b>${doneM+doneE}</b><span>mornings done</span></div>
+      <div><b>${avg}%</b><span>average first go</span></div>
+      <div><b>${Math.round(totalSecs/60)}</b><span>minutes total</span></div>
+      <div><b>${DB.errors.length}</b><span>questions missed</span></div>
+    </div>
+
+    <div class="hr"></div>
+    <h3>What to give a tutor</h3>
+    <p class="sub">Topics where he needed more than one go, most stubborn first.</p>
+    ${topics.length?`<table><thead><tr><th>Topic</th><th class="n">Missed</th><th class="n">Wrong tries</th></tr></thead>
+      <tbody>${topics.map(([k,v])=>`<tr><td>${k}</td><td class="n">${v.n}</td><td class="n">${v.tries}</td></tr>`).join("")}</tbody></table>`
+      :`<p class="sub">Nothing logged yet.</p>`}
+
+    <div class="hr"></div>
+    <h3>Every question he got wrong</h3>
+    <p class="sub">What he picked, how many tries, and how long he sat on it.</p>
+    <div style="margin-top:12px">
+      ${DB.errors.length?DB.errors.slice().reverse().slice(0,60).map(e=>`
+        <div class="logitem">
+          <div class="q">${esc(e.q)}</div>
+          ${e.stem?`<div class="d">${esc(e.stem).replace(/\n/g," ")}</div>`:""}
+          <div class="picks">${e.picks.map(p=>`<span class="tag">${esc(p)}</span>`).join("")}
+            <span class="tag ok">${esc(e.correct)}</span></div>
+          <div class="d">${SUBJECTS[e.sub].name} Day ${e.day} · ${e.tries} wrong ${e.tries===1?"try":"tries"} · ${e.secs}s · ${e.date}</div>
+        </div>`).join("")
+        :`<p class="sub">Nothing logged yet.</p>`}
+    </div>
+
+    <div class="hr"></div>
+    <h3>Session history</h3>
+    ${sess.length?`<table><thead><tr><th>Date</th><th>Session</th><th class="n">Score</th><th class="n">Time</th></tr></thead>
+      <tbody>${sess.slice(0,40).map(x=>`<tr>
+        <td class="n" style="text-align:left">${x.date}</td>
+        <td>${SUBJECTS[x.sub].name} Day ${x.day}<br><span class="d" style="color:var(--soft);font-size:.78rem">${esc(x.dayTitle)}</span></td>
+        <td class="n">${x.score}/${x.total}</td>
+        <td class="n">${mmss(x.secs)}</td></tr>`).join("")}</tbody></table>`
+      :`<p class="sub">No sessions yet.</p>`}
+
+    <div class="hr"></div>
+    <h3>Copy for the tutor</h3>
+    <p class="sub">Plain text summary you can paste into a message or email.</p>
+    <textarea id="rep" readonly></textarea>
+    <div class="actions"><button class="btn sm" id="copy">Copy to clipboard</button></div>
+
+    <div class="hr"></div>
+    <h3>Settings</h3>
+    <p class="sub">Countdown length for each session.</p>
+    <div class="seg" id="mins">
+      ${[5,10,15,20,30].map(m=>`<button data-m="${m}" class="${DB.mins===m?"on":""}">${m} min</button>`).join("")}
+    </div>
+    <p class="sub" style="margin-top:16px">Change the PIN.</p>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <input type="password" id="newpin" inputmode="numeric" maxlength="8" placeholder="new PIN">
+      <button class="btn sm" id="setpin">Save</button>
+    </div>
+    <div id="setmsg"></div>
+    <div class="actions" style="margin-top:20px">
+      <button class="btn ghost" id="back">Back to the days</button>
+      <button class="btn ghost sm" id="wipe">Erase all results</button>
+    </div>
+  </div>`;
+
+  el("rep").value=report();
+  el("copy").onclick=async()=>{
+    const t=el("rep"); t.select();
+    try{ await navigator.clipboard.writeText(t.value); el("copy").textContent="Copied"; }
+    catch(e){ document.execCommand("copy"); el("copy").textContent="Copied"; }
+    setTimeout(()=>el("copy").textContent="Copy to clipboard",1800);
+  };
+  document.querySelectorAll("#mins button").forEach(b=>b.onclick=async()=>{
+    DB.mins=+b.dataset.m; await save(); parentArea();
+  });
+  el("setpin").onclick=async()=>{
+    const v=el("newpin").value.trim();
+    if(v.length<4){ el("setmsg").innerHTML=`<div class="msg no"><b>Too short</b>Use at least four digits.</div>`; return; }
+    DB.pin=v; await save();
+    el("setmsg").innerHTML=`<div class="msg yes"><b>PIN saved</b>Use ${v} next time.</div>`;
+  };
+  el("wipe").onclick=async()=>{
+    if(!confirm("Erase all scores, timings and the wrong-answer log? This cannot be undone.")) return;
+    DB=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),{pin:DB.pin,mins:DB.mins});
+    await save(); parentArea();
+  };
+  el("back").onclick=home;
+  show("parent");
+}
+
+function report(){
+  const L=[];
+  L.push("MORNING PRACTICE — PROGRESS REPORT");
+  L.push("Generated "+new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}));
+  L.push("");
+  L.push(`Maths mornings done: ${Object.keys(DB.best.maths).length} of ${MATHS.length}`);
+  L.push(`English mornings done: ${Object.keys(DB.best.english).length} of ${ENGLISH.length}`);
+  const tot=DB.sessions.reduce((a,x)=>a+x.secs,0);
+  L.push(`Total time: ${Math.round(tot/60)} minutes across ${DB.sessions.length} sessions`);
+  L.push("");
+  L.push("SCORES BY SESSION (first attempts only)");
+  DB.sessions.slice().reverse().slice(0,25).forEach(x=>{
+    L.push(`  ${x.date}  ${SUBJECTS[x.sub].name} Day ${x.day} — ${x.dayTitle}: ${x.score}/${x.total} in ${mmss(x.secs)}`);
+  });
+  L.push("");
+  L.push("TOPICS NEEDING HELP (most wrong attempts first)");
+  const by={};
+  DB.errors.forEach(e=>{const k=SUBJECTS[e.sub].name+" - "+e.topic;by[k]=by[k]||{n:0,t:0};by[k].n++;by[k].t+=e.tries;});
+  Object.entries(by).sort((a,b)=>b[1].t-a[1].t).forEach(([k,v])=>{
+    L.push(`  ${k}: ${v.n} questions missed, ${v.t} wrong attempts`);
+  });
+  L.push("");
+  L.push("QUESTIONS HE GOT WRONG");
+  DB.errors.slice().reverse().slice(0,40).forEach(e=>{
+    L.push(`  [${SUBJECTS[e.sub].name} Day ${e.day}] ${e.q.replace(/<[^>]+>/g,"")}`);
+    if(e.stem) L.push(`      ${e.stem.replace(/<[^>]+>/g,"").replace(/\n/g," ")}`);
+    L.push(`      He chose: ${e.picks.map(p=>p.replace(/<[^>]+>/g,"")).join(", ")}`);
+    L.push(`      Correct: ${e.correct.replace(/<[^>]+>/g,"")}   (${e.tries} wrong ${e.tries===1?"try":"tries"}, ${e.secs}s)`);
+  });
+  return L.join("\n");
+}
+
+load().then(()=>{paint();home()});
+</script>
