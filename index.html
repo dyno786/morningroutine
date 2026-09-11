@@ -159,7 +159,9 @@
   .seg button{font:inherit;font-size:.85rem;font-weight:600;padding:9px 14px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--soft);cursor:pointer}
   .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .hr{height:1px;background:var(--line);margin:20px 0}
-  .foot{text-align:center;margin-top:18px}
+  .foot{text-align:center;margin-top:22px;padding-bottom:6px}
+  .foot .link{opacity:.7;font-size:.82rem}
+  .foot .link:hover{opacity:1}
 
   /* ---- explainer ---- */
   .sum{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0 6px;flex-wrap:wrap}
@@ -275,6 +277,9 @@
   <div id="done" hidden></div>
   <div id="explain" hidden></div>
   <div id="parent" hidden></div>
+  <div class="foot" id="globalFoot">
+    <button class="link" id="toParentGlobal">Parent area</button>
+  </div>
 </div>
 
 <script>
@@ -1686,7 +1691,7 @@ const SUBJECTS={
   maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
   english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
 };
-const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:""};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[]};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
 let SUB="maths";
 
@@ -1695,7 +1700,11 @@ let S=null, qi=0, sel=[], answered=false, tries=0, picks=[], got=0;
 let t0=null, tick=null, qt0=null, unlocked=false;
 
 const el=id=>document.getElementById(id);
-const show=id=>{["home","brief","quiz","done","parent","explain"].forEach(k=>el(k).hidden=(k!==id));window.scrollTo(0,0)};
+const show=id=>{
+  ["home","brief","quiz","done","parent","explain"].forEach(k=>el(k).hidden=(k!==id));
+  const f=el("globalFoot"); if(f) f.hidden=(id==="parent");
+  window.scrollTo(0,0);
+};
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const mmss=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
 const today=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short"});
@@ -1763,12 +1772,10 @@ function home(){
       <span class="n">Day ${d.n}</span><span class="t">${d.t}</span></button>`;
   });
   out+="</div>";
-  out+=`<div class="foot"><button class="link" id="toParent">Parent area</button></div>`;
 
   el("home").innerHTML=out;
   document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{SUB=b.dataset.sub;home()});
   document.querySelectorAll(".day").forEach(b=>b.onclick=()=>brief(+b.dataset.i));
-  el("toParent").onclick=parentGate;
   show("home");
 }
 
@@ -1880,6 +1887,7 @@ function submit(){
     el("msg").innerHTML=`<div class="msg yes"><b>${tries===0?"Correct — first go":"Correct now"}</b>
       <div class="work">${q.w}</div></div>`;
     el("helpSlot").innerHTML="";
+    enqueue(questionRow(q, tries===0&&!hUsed, Math.round((Date.now()-qt0)/1000)));
     el("primary").textContent = qi===S.d.qs.length-1?"Finish":"Next question";
     el("primary").disabled=false;
   } else {
@@ -1909,9 +1917,10 @@ async function finish(){
   const total=S.d.qs.length, secs=Math.round((Date.now()-t0)/1000);
   const b=DB.best[S.sub];
   if(b[S.i]==null||got>b[S.i]) b[S.i]=got;
-  DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,date:today(),sent:false});
+  DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,date:today()});
   await save();
-  syncSheet();
+  await enqueue(["Session",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
+                 got,total,secs,"","","","","",""]);
 
   let verdict;
   if(got===total) verdict="Every one right first time. Move on tomorrow.";
@@ -2035,7 +2044,7 @@ function parentArea(){
 
     <div class="hr"></div>
     <h3>Google Sheet — automatic log</h3>
-    <p class="sub">Paste the web app URL from your sheet's script. Every finished session then posts itself, with its missed questions.</p>
+    <p class="sub">Paste the web app URL from your sheet's script. Every question posts the moment he answers it, so nothing is lost if he stops halfway.</p>
     <input type="text" id="shUrl" placeholder="https://script.google.com/macros/s/.../exec"
       style="font-family:Lexend;font-size:.9rem;text-align:left;margin-bottom:8px" value="${DB.sheetUrl||""}">
     <input type="text" id="shKey" placeholder="secret word (must match the script)"
@@ -2043,7 +2052,7 @@ function parentArea(){
     <div class="actions">
       <button class="btn sm" id="shSave">Save</button>
       <button class="btn ghost sm" id="shTest">Send a test row</button>
-      <button class="btn ghost sm" id="shNow">Sync now${pending().length?" ("+pending().length+" waiting)":""}</button>
+      <button class="btn ghost sm" id="shNow">Sync now${DB.queue.length?" ("+DB.queue.length+" waiting)":""}</button>
     </div>
     <div id="shMsg"></div>
 
@@ -2102,10 +2111,10 @@ function parentArea(){
     }catch(e){ el("shMsg").innerHTML=`<div class="msg no"><b>Could not reach it</b>Check the URL ends in /exec.</div>`; }
   };
   el("shNow").onclick=async()=>{
-    const r=await syncSheet();
+    const r=await flushQueue();
     el("shMsg").innerHTML = r.ok
-      ? `<div class="msg yes"><b>${r.sent?"Sent "+r.sent+" session"+(r.sent===1?"":"s"):"Nothing waiting"}</b>${r.sent?r.rows+" rows added.":"Everything is already in the sheet."}</div>`
-      : `<div class="msg no"><b>Not sent</b>${r.why==="no url"?"Save a web app URL first.":"Something went wrong — try again."}</div>`;
+      ? `<div class="msg yes"><b>${r.sent?"Sent "+r.sent+" row"+(r.sent===1?"":"s"):"Nothing waiting"}</b>${r.sent?"":"Everything is already in the sheet."}</div>`
+      : `<div class="msg no"><b>Not sent</b>${r.why==="no url"?"Save a web app URL first.":"No connection — it will go automatically next time."}</div>`;
     if(r.ok&&r.sent) setTimeout(parentArea,1400);
   };
   document.querySelectorAll("#mins button").forEach(b=>b.onclick=async()=>{
@@ -2126,37 +2135,40 @@ function parentArea(){
   show("parent");
 }
 
-/* ---------------- Google Sheet sync ---------------- */
-function rowsFor(sess){
-  const strip=v=>String(v==null?"":v).replace(/<[^>]+>/g,"");
-  const rows=[["Session",sess.date,SUBJECTS[sess.sub].name,sess.day,strip(sess.dayTitle),
-               sess.score,sess.total,sess.secs,"","","","","",""]];
-  DB.errors.filter(e=>e.sid&&e.sid===sess.sid).forEach(e=>{
-    rows.push(["Missed question",e.date,SUBJECTS[e.sub].name,e.day,strip(e.dayTitle),"","",e.secs,
-      strip(e.q)+(e.stem?" — "+strip(e.stem).replace(/\n/g," "):""),
-      e.picks.map(strip).join(" | "),strip(e.correct),e.tries,
-      e.helped?"Yes":"No",e.helpFirst?"Yes":"No"]);
-  });
-  return rows;
-}
-function pending(){ return DB.sessions.filter(x=>x.sid&&!x.sent); }
+/* ---------------- Google Sheet sync ----------------
+   Every question is queued the moment it is answered, so nothing is lost
+   if he stops halfway or closes the tab. The queue survives a refresh.   */
+const strip=v=>String(v==null?"":v).replace(/<[^>]+>/g,"").replace(/\n/g," ");
 
-async function syncSheet(quiet){
+async function enqueue(row){
+  DB.queue.push(row);
+  await save();
+  flushQueue();
+}
+
+async function flushQueue(){
   if(!DB.sheetUrl) return {ok:false,why:"no url"};
-  const todo=pending();
-  if(!todo.length) return {ok:true,sent:0};
-  let rows=[];
-  todo.forEach(x=>{ rows=rows.concat(rowsFor(x)); });
+  if(!DB.queue.length) return {ok:true,sent:0};
+  const batch=DB.queue.slice();
   try{
     await fetch(DB.sheetUrl,{
       method:"POST", mode:"no-cors",
       headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({key:DB.sheetKey||"",rows})
+      body:JSON.stringify({key:DB.sheetKey||"",rows:batch})
     });
-    todo.forEach(x=>x.sent=true);
+    DB.queue=DB.queue.slice(batch.length);
     await save();
-    return {ok:true,sent:todo.length,rows:rows.length};
-  }catch(e){ return {ok:false,why:String(e)}; }
+    return {ok:true,sent:batch.length};
+  }catch(e){ return {ok:false,why:"offline"}; }
+}
+
+function questionRow(q,rightFirst,secs){
+  return ["Question",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
+          rightFirst?1:0,1,secs,
+          strip(q.a)+(q.s?" — "+strip(q.s):""),
+          picks.map(strip).join(" | "),
+          strip(q.multi?q.c.map(i=>q.o[i]).join(" + "):q.o[q.c]),
+          tries, hUsed?"Yes":"No", hEarly?"Yes":"No"];
 }
 
 function csv(){
@@ -2207,5 +2219,7 @@ window.addEventListener("resize",()=>{
     if(X && !el("explain").hidden && el("xStage")){ X.def.build(el("xStage"),X.p); exPaint(); }
   },250);
 });
-load().then(()=>{paint();home()});
+document.getElementById("toParentGlobal").onclick=()=>parentGate();
+window.addEventListener("online",()=>flushQueue());
+load().then(()=>{paint();home();flushQueue()});
 </script>
