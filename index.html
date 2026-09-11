@@ -1356,6 +1356,196 @@ function exQuiz(){
 }
 
 
+
+/* =======================================================================
+   REMIX — fresh questions with new numbers, so repeating a day is
+   practice rather than memory.
+   ======================================================================= */
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const one=a=>a[Math.floor(Math.random()*a.length)];
+const p2=v=>"£"+(Math.round(v*100)/100).toFixed(2);
+
+/* answer first, then plausible wrong ones; order is shuffled later */
+function mkOpts(ans,cands,fmt){
+  fmt=fmt||(v=>String(v));
+  const out=[ans];
+  cands.forEach(v=>{ if(out.length<4&&Number.isFinite(v)&&v>0&&!out.some(x=>Math.abs(x-v)<1e-9)) out.push(v); });
+  let k=1;
+  while(out.length<4){ const v=ans+k*(Math.abs(ans)>10?5:1); if(!out.some(x=>Math.abs(x-v)<1e-9)) out.push(v); k++; }
+  return {o:out.map(fmt),c:0};
+}
+
+const GEN={
+ /* fractions of an amount */
+ "maths:1":()=>Array.from({length:6},()=>{
+   const b=one([2,3,4,5,6,10]), a=rnd(1,b-1), per=rnd(2,12), T=per*b, ans=per*a;
+   const {o,c}=mkOpts(ans,[per,per*(a+1),T-ans,T,Math.round(T/2)]);
+   return {a:`What is ${a}/${b} of ${T}?`,s:`${a}/${b} of ${T}`,o,c,
+     h:`Divide by the bottom number first: ${T} ÷ ${b}.`,
+     w:`${T} ÷ ${b} = ${per}, then ${per} × ${a} = ${ans}.`,
+     sc:{k:"frac",a,b,T}};
+ }),
+
+ /* percentages of an amount */
+ "maths:2":()=>Array.from({length:6},()=>{
+   const p=one([10,20,25,40,50,60,75,80]), T=rnd(2,25)*20, ans=T*p/100, row=T/10;
+   const u=one(["","","ml","g"]);
+   const f=v=>v+(u?" "+u:"");
+   const {o,c}=mkOpts(ans,[row,T-ans,ans+row,T]);
+   return {a:`What is ${p}% of ${T}${u?" "+u:""}?`,s:`${p}% of ${T}${u?" "+u:""}`,o:o.map(f),c,
+     h:`Find 10% first: ${T} ÷ 10 = ${row}.`,
+     w:`10% is ${row}, so ${p}% is ${row} × ${p/10} = ${ans}.`,
+     sc:{k:"pct",p,T,u}};
+ }),
+
+ /* turning a number into a percentage */
+ "maths:3":()=>Array.from({length:6},()=>{
+   const den=one([4,5,10,20,25,50]), num=rnd(1,den-1), mult=rnd(1,4);
+   const total=den*mult, part=num*mult, ans=100*num/den;
+   const {o,c}=mkOpts(ans,[part,100-ans,num*10,Math.round(ans/2)],v=>v+"%");
+   return {a:`${part} out of ${total} children walk to school. What percentage is that?`,
+     s:`${part} out of ${total}`,o,c,
+     h:`Write it as a fraction and cancel it down: ${part}/${total}.`,
+     w:`${part}/${total} = ${num}/${den}, and ${num}/${den} is ${ans}%.`};
+ }),
+
+ /* ratio: equal parts and scaling */
+ "maths:5":()=>Array.from({length:6},(_,i)=>{
+   if(i%2===0){
+     const n=rnd(3,6), per=rnd(3,12), total=n*per, take=rnd(2,n), ans=per*take;
+     const {o,c}=mkOpts(ans,[per,total,per*(take+1),total-ans]);
+     return {a:`${n} equal parts make ${total}. What are ${take} parts worth?`,
+       s:`${n} parts = ${total}`,o,c,
+       h:`Find one part first: ${total} ÷ ${n}.`,
+       w:`${total} ÷ ${n} = ${per}, then ${per} × ${take} = ${ans}.`,
+       sc:{k:"parts",total,n,take}};
+   }
+   const per=rnd(2,12)*10, f=one([1.5,2,2.5,3,0.5]), want=100*f, ans=per*f;
+   const {o,c}=mkOpts(ans,[per,want,per*2,per/2],v=>v+" g");
+   return {a:`100 ml of drink needs ${per} g of fruit. How much fruit for ${want} ml?`,
+     s:`${per} g per 100 ml → ${want} ml`,o,c,
+     h:`How many times bigger is ${want} than 100?`,
+     w:`${want} ÷ 100 = ${f}, so ${per} × ${f} = ${ans} g.`,
+     sc:{k:"scale",per,pu:"g",base:100,bu:"ml",want,ans}};
+ }),
+
+ /* adding and subtracting decimals */
+ "maths:7":()=>Array.from({length:6},()=>{
+   const add=Math.random()<0.6;
+   const xw=rnd(3,40), xd=rnd(10,89), yw=rnd(1,9), yd=add?rnd(10,89):rnd(1,xd-1);
+   const x=xw+xd/100, y=yw+yd/100;
+   const ans=Math.round((add?x+y:x-y)*100)/100;
+   const f=v=>(Math.round(v*100)/100).toFixed(2);
+   const {o,c}=mkOpts(ans,[ans+0.05,ans-0.1,ans+0.9,Math.round(ans)],f);
+   return {a:"Work it out.",s:`${f(x)} ${add?"+":"−"} ${f(y)}`,o,c,
+     h:"Line the decimal points up, one under the other.",
+     w:`${f(x)} ${add?"+":"−"} ${f(y)} = ${f(ans)}. Whole numbers first, then the bits after the point.`,
+     sc:{k:"dec",x,y,op:add?"+":"-",u:""}};
+ }),
+
+ /* rounding */
+ "maths:8":()=>Array.from({length:6},(_,i)=>{
+   if(i<4){
+     const whole=rnd(0,9), d1=rnd(0,9), d2=rnd(0,9), d3=rnd(0,9);
+     const v=whole+d1/10+d2/100+d3/1000;
+     const ans=Math.round(v*10)/10;
+     const {o,c}=mkOpts(ans,[Math.round(v*100)/100,Math.floor(v*10)/10,Math.ceil(v*10)/10,Math.round(v)],
+                        x=>(Math.round(x*1000)/1000).toString());
+     return {a:"Round to ONE decimal place.",s:(Math.round(v*1000)/1000).toFixed(3),o,c,
+       h:`One digit after the point. The next digit is ${d2}.`,
+       w:`The next digit is ${d2}, so it rounds ${d2>=5?"up":"down"} to ${ans}.`};
+   }
+   const n=rnd(2,40)*100+rnd(1,99), to=one([10,100]);
+   const ans=Math.round(n/to)*to;
+   const {o,c}=mkOpts(ans,[Math.floor(n/to)*to,Math.ceil(n/to)*to+to,n]);
+   return {a:`Round to the nearest ${to}.`,s:String(n),o,c,
+     h:`Which multiple of ${to} is it nearer?`,
+     w:`${n} rounds to ${ans}.`};
+ }),
+
+ /* multiplying and dividing */
+ "maths:9":()=>Array.from({length:6},(_,i)=>{
+   if(i<3){
+     const pence=rnd(110,980), n=rnd(2,9), ans=pence*n/100;
+     const {o,c}=mkOpts(ans,[ans+1,ans-0.9,ans*2,Math.round(ans)],p2);
+     return {a:`One box costs ${p2(pence/100)}. What do ${n} boxes cost?`,s:`${p2(pence/100)} × ${n}`,o,c,
+       h:"Take the point out, multiply, then put it back.",
+       w:`${pence} × ${n} = ${pence*n} pence, which is ${p2(ans)}.`};
+   }
+   const d=rnd(3,15), q=rnd(11,60), t=d*q;
+   const {o,c}=mkOpts(q,[q+2,q-3,q*2,d]);
+   return {a:"Work it out.",s:`${t} ÷ ${d}`,o,c,
+     h:`Check by multiplying back: which option times ${d} gives ${t}?`,
+     w:`${q} × ${d} = ${t}, so the answer is ${q}.`};
+ }),
+
+ /* unit conversion */
+ "maths:11":()=>Array.from({length:6},()=>{
+   const P=[["cm","m",100,"÷"],["m","km",1000,"÷"],["g","kg",1000,"÷"],["ml","litres",1000,"÷"],
+            ["mm","cm",10,"÷"],["kg","g",1000,"×"],["m","cm",100,"×"],["litres","ml",1000,"×"]];
+   const [from,to,f,dir]=one(P);
+   const v = dir==="÷" ? rnd(2,95)*(f>=1000?10:1) : rnd(2,40)/(f===10?1:2);
+   const val = dir==="÷" ? v : Math.round(v*10)/10;
+   const ans = dir==="÷" ? val/f : val*f;
+   const fmt=x=>(Math.round(x*1000)/1000)+" "+to;
+   const {o,c}=mkOpts(ans,[ans*10,ans/10,val,ans*100],fmt);
+   return {a:`Write ${val} ${from} in ${to}.`,s:`${val} ${from} = ? ${to}`,o,c,
+     h:`There are ${f} ${from} in one ${to.replace(/s$/,"")}${f===1?"":""}.`,
+     w:`${val} ${dir} ${f} = ${Math.round(ans*1000)/1000} ${to}.`,
+     sc:{k:"unit",v:val,from,to,f,dir}};
+ }),
+
+ /* area */
+ "maths:13":()=>Array.from({length:6},()=>{
+   const k=one(["tri","tri","para","rect"]), b=rnd(2,12), h=rnd(2,12);
+   const ans=k==="tri"?b*h/2:b*h;
+   const {o,c}=mkOpts(ans,[b*h,b*h/2,b+h,2*(b+h)],v=>v+" cm²");
+   const name=k==="tri"?"triangle":k==="para"?"parallelogram":"rectangle";
+   return {a:`A ${name} has base ${b} cm and ${k==="para"?"perpendicular ":""}height ${h} cm. What is its area?`,
+     s:`${name}: base ${b}, height ${h}`,o,c,
+     h:k==="tri"?"Multiply base by height, then halve it.":"Base times height — and no halving.",
+     w:k==="tri"?`${b} × ${h} = ${b*h}, then ÷ 2 = ${ans} cm².`:`${b} × ${h} = ${ans} cm².`,
+     sc:{k:"area",k2:k,b,h}};
+ }),
+
+ /* algebra */
+ "maths:16":()=>Array.from({length:6},()=>{
+   const n=rnd(3,9), form=one(["2n+3","3n-2","n2+3n","n2","4n+1","n2-n"]);
+   let ans,label;
+   if(form==="2n+3"){ans=2*n+3;label="2n + 3";}
+   else if(form==="3n-2"){ans=3*n-2;label="3n − 2";}
+   else if(form==="n2+3n"){ans=n*n+3*n;label="n² + 3n";}
+   else if(form==="n2"){ans=n*n;label="n²";}
+   else if(form==="4n+1"){ans=4*n+1;label="4n + 1";}
+   else {ans=n*n-n;label="n² − n";}
+   const {o,c}=mkOpts(ans,[n*n,2*n,ans+n,ans-n,n+3]);
+   return {a:`When n = ${n}, what is ${label}?`,s:`${label},  n = ${n}`,o,c,
+     h:"Do the squaring first, then the multiplying, then the adding.",
+     w:`Putting ${n} in gives ${ans}.`};
+ })
+};
+
+/* ---- shuffling, used by every remix level ---- */
+function shuffleOpts(q){
+  const idx=q.o.map((_,i)=>i).sort(()=>Math.random()-0.5);
+  const o=idx.map(i=>q.o[i]);
+  const c=q.multi ? q.c.map(ci=>idx.indexOf(ci)).sort((a,b)=>a-b) : idx.indexOf(q.c);
+  return Object.assign({},q,{o,c});
+}
+
+/* build the day's questions according to the remix setting */
+function prepDay(d,key){
+  const mode=DB.remix||"off";
+  if(mode==="off") return Object.assign({},d,{qs:d.qs.map((q,i)=>Object.assign({_i:i},q))});
+  let qs;
+  if(mode==="fresh"&&GEN[key]){
+    qs=GEN[key]().map(q=>Object.assign({_i:-1},q));      // brand new, so no fixed scaffold index
+  }else{
+    qs=d.qs.map((q,i)=>Object.assign({_i:i},q));
+  }
+  return Object.assign({},d,{qs:qs.map(shuffleOpts)});
+}
+
 /* =======================================================================
    SCAFFOLDS — after two wrong tries, break the question into small steps.
    Never states the answer. Asks until he works it out himself.
@@ -1635,9 +1825,14 @@ const SCAFFOLDS={
 };
 
 function scaffoldFor(sub,dayN,qIdx){
-  const list=SCAFFOLDS[sub+":"+dayN];
-  if(!list) return null;
-  const d=list[qIdx];
+  let d=null;
+  const q=(S&&S.d&&S.d.qs)?S.d.qs[qIdx]:null;
+  if(q&&q.sc) d=q.sc;                                   // generated question carries its own
+  else{
+    const list=SCAFFOLDS[sub+":"+dayN];
+    if(!list) return null;
+    d=list[q&&q._i>=0?q._i:qIdx];                        // shuffled: follow the original index
+  }
   if(!d) return null;
   const spec = d.k==="area" ? Object.assign({},d,{k:d.k2}) : d;
   try{ const steps=BUILD[d.k](spec); return (steps&&steps.length)?steps:null; }
@@ -1719,7 +1914,7 @@ const SUBJECTS={
   maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
   english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
 };
-const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[]};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle"};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
 let SUB="maths", VIEW="days";
 
@@ -2068,8 +2263,9 @@ function drawMethod(d){
     <p class="${M.length>1?"mwhen":"monly"}">${M.length>1?"<b>When to use it:</b> "+m.when:m.when}</p>`;
 }
 function brief(n){
-  const s=SUBJECTS[SUB]; const d=s.days[n];
-  S={sub:SUB,i:n,d:d};
+  const s=SUBJECTS[SUB]; const base=s.days[n];
+  const d=prepDay(base,SUB+":"+base.n);
+  S={sub:SUB,i:n,d:d,base:base};
   el("brief").innerHTML=`<div class="card">
     <h1>Day ${d.n}</h1><h2>${d.t}</h2>
     ${methodTabs(d)}
@@ -2085,7 +2281,7 @@ function brief(n){
     document.querySelectorAll(".mtab").forEach(x=>x.classList.remove("on"));
     b.classList.add("on"); drawMethod(d);
   });
-  el("start").onclick=begin;
+  el("start").onclick=()=>{ S.d=prepDay(S.base,SUB+":"+S.base.n); begin(); };
   el("back").onclick=home;
   if(el("xOpen")) el("xOpen").onclick=()=>openExplainer(EXPLAINERS[SUB+":"+d.n],d.n,n);
   show("brief");
@@ -2323,6 +2519,19 @@ function parentArea(){
     </div>
 
     <div class="hr"></div>
+    <h3>Question remix</h3>
+    <p class="sub">Stops him learning the answers by position instead of by working them out.</p>
+    <div class="seg" id="remix">
+      <button data-v="off" class="${(DB.remix||"shuffle")==="off"?"on":""}">Same every time</button>
+      <button data-v="shuffle" class="${(DB.remix||"shuffle")==="shuffle"?"on":""}">Shuffle the answers</button>
+      <button data-v="fresh" class="${(DB.remix||"shuffle")==="fresh"?"on":""}">New numbers</button>
+    </div>
+    <p class="sub" style="margin-top:8px">${
+      (DB.remix||"shuffle")==="off" ? "Identical questions in the same order — useful for a fair before-and-after comparison." :
+      (DB.remix||"shuffle")==="fresh" ? "Ten maths days generate completely new numbers each time. The rest shuffle." :
+      "Same questions, but the answer options move around."}</p>
+
+    <div class="hr"></div>
     <h3>Google Sheet — automatic log</h3>
     <p class="sub">Paste the web app URL from your sheet's script. Every question posts the moment he answers it, so nothing is lost if he stops halfway.</p>
     <input type="text" id="shUrl" placeholder="https://script.google.com/macros/s/.../exec"
@@ -2375,6 +2584,9 @@ function parentArea(){
     catch(e){ document.execCommand("copy"); el("copy").textContent="Copied"; }
     setTimeout(()=>el("copy").textContent="Copy to clipboard",1800);
   };
+  document.querySelectorAll("#remix button").forEach(b=>b.onclick=async()=>{
+    DB.remix=b.dataset.v; await save(); parentArea();
+  });
   el("shSave").onclick=async()=>{
     DB.sheetUrl=el("shUrl").value.trim(); DB.sheetKey=el("shKey").value.trim();
     await save();
