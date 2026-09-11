@@ -1686,7 +1686,7 @@ const SUBJECTS={
   maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
   english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
 };
-const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[]};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:""};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
 let SUB="maths";
 
@@ -1818,7 +1818,7 @@ function brief(n){
 
 /* ------------------------------- QUIZ -------------------------------- */
 function begin(){
-  qi=0;got=0;t0=Date.now();
+  qi=0;got=0;t0=Date.now(); S.sid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   clearInterval(tick); tick=setInterval(clock,1000);
   render();show("quiz");
 }
@@ -1896,7 +1896,7 @@ function submit(){
 }
 function logError(q,picks,tries){
   DB.errors.push({
-    sub:S.sub, day:S.d.n, dayTitle:S.d.t, topic:S.d.wk,
+    sid:S.sid, sub:S.sub, day:S.d.n, dayTitle:S.d.t, topic:S.d.wk,
     q:q.a, stem:q.s||"", correct:q.multi?q.c.map(i=>q.o[i]).join(" + "):q.o[q.c],
     picks:picks.slice(), tries:tries, helped:hUsed, helpFirst:hEarly,
     secs:Math.round((Date.now()-qt0)/1000), date:today()
@@ -1909,8 +1909,9 @@ async function finish(){
   const total=S.d.qs.length, secs=Math.round((Date.now()-t0)/1000);
   const b=DB.best[S.sub];
   if(b[S.i]==null||got>b[S.i]) b[S.i]=got;
-  DB.sessions.push({sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,date:today()});
+  DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,date:today(),sent:false});
   await save();
+  syncSheet();
 
   let verdict;
   if(got===total) verdict="Every one right first time. Move on tomorrow.";
@@ -2024,6 +2025,29 @@ function parentArea(){
     <div class="actions"><button class="btn sm" id="copy">Copy to clipboard</button></div>
 
     <div class="hr"></div>
+    <h3>Spreadsheet export</h3>
+    <p class="sub">One row per session and per missed question. Copy this and paste it into cell A1 of your Google Sheet, then use Data &rsaquo; Split text to columns.</p>
+    <textarea id="csv" readonly style="height:130px"></textarea>
+    <div class="actions">
+      <button class="btn sm" id="copycsv">Copy for Sheets</button>
+      <button class="btn ghost sm" id="dlcsv">Download .csv</button>
+    </div>
+
+    <div class="hr"></div>
+    <h3>Google Sheet — automatic log</h3>
+    <p class="sub">Paste the web app URL from your sheet's script. Every finished session then posts itself, with its missed questions.</p>
+    <input type="text" id="shUrl" placeholder="https://script.google.com/macros/s/.../exec"
+      style="font-family:Lexend;font-size:.9rem;text-align:left;margin-bottom:8px" value="${DB.sheetUrl||""}">
+    <input type="text" id="shKey" placeholder="secret word (must match the script)"
+      style="font-family:Lexend;font-size:.9rem;text-align:left" value="${DB.sheetKey||""}">
+    <div class="actions">
+      <button class="btn sm" id="shSave">Save</button>
+      <button class="btn ghost sm" id="shTest">Send a test row</button>
+      <button class="btn ghost sm" id="shNow">Sync now${pending().length?" ("+pending().length+" waiting)":""}</button>
+    </div>
+    <div id="shMsg"></div>
+
+    <div class="hr"></div>
     <h3>Settings</h3>
     <p class="sub">Countdown length for each session.</p>
     <div class="seg" id="mins">
@@ -2042,11 +2066,47 @@ function parentArea(){
   </div>`;
 
   el("rep").value=report();
+  el("csv").value=csv();
+  el("copycsv").onclick=async()=>{
+    const t=el("csv"); t.select();
+    try{ await navigator.clipboard.writeText(t.value); }catch(e){ document.execCommand("copy"); }
+    el("copycsv").textContent="Copied"; setTimeout(()=>el("copycsv").textContent="Copy for Sheets",1800);
+  };
+  el("dlcsv").onclick=()=>{
+    const blob=new Blob([csv()],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="practice-results-"+new Date().toISOString().slice(0,10)+".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  };
   el("copy").onclick=async()=>{
     const t=el("rep"); t.select();
     try{ await navigator.clipboard.writeText(t.value); el("copy").textContent="Copied"; }
     catch(e){ document.execCommand("copy"); el("copy").textContent="Copied"; }
     setTimeout(()=>el("copy").textContent="Copy to clipboard",1800);
+  };
+  el("shSave").onclick=async()=>{
+    DB.sheetUrl=el("shUrl").value.trim(); DB.sheetKey=el("shKey").value.trim();
+    await save();
+    el("shMsg").innerHTML=`<div class="msg yes"><b>Saved</b>${DB.sheetUrl?"Finished sessions will post themselves from now on.":"Cleared — nothing will be sent."}</div>`;
+  };
+  el("shTest").onclick=async()=>{
+    const u=el("shUrl").value.trim();
+    if(!u){ el("shMsg").innerHTML=`<div class="msg no"><b>No URL yet</b>Paste the web app URL first.</div>`; return; }
+    DB.sheetUrl=u; DB.sheetKey=el("shKey").value.trim(); await save();
+    try{
+      await fetch(u,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({key:DB.sheetKey,rows:[["Test row",today(),"—","","Connection test","","","","","","","","",""]]})});
+      el("shMsg").innerHTML=`<div class="msg yes"><b>Sent</b>Open the sheet and look for a row saying "Test row". If it is not there, check the secret word matches and that the script is deployed for "Anyone".</div>`;
+    }catch(e){ el("shMsg").innerHTML=`<div class="msg no"><b>Could not reach it</b>Check the URL ends in /exec.</div>`; }
+  };
+  el("shNow").onclick=async()=>{
+    const r=await syncSheet();
+    el("shMsg").innerHTML = r.ok
+      ? `<div class="msg yes"><b>${r.sent?"Sent "+r.sent+" session"+(r.sent===1?"":"s"):"Nothing waiting"}</b>${r.sent?r.rows+" rows added.":"Everything is already in the sheet."}</div>`
+      : `<div class="msg no"><b>Not sent</b>${r.why==="no url"?"Save a web app URL first.":"Something went wrong — try again."}</div>`;
+    if(r.ok&&r.sent) setTimeout(parentArea,1400);
   };
   document.querySelectorAll("#mins button").forEach(b=>b.onclick=async()=>{
     DB.mins=+b.dataset.m; await save(); parentArea();
@@ -2064,6 +2124,48 @@ function parentArea(){
   };
   el("back").onclick=home;
   show("parent");
+}
+
+/* ---------------- Google Sheet sync ---------------- */
+function rowsFor(sess){
+  const strip=v=>String(v==null?"":v).replace(/<[^>]+>/g,"");
+  const rows=[["Session",sess.date,SUBJECTS[sess.sub].name,sess.day,strip(sess.dayTitle),
+               sess.score,sess.total,sess.secs,"","","","","",""]];
+  DB.errors.filter(e=>e.sid&&e.sid===sess.sid).forEach(e=>{
+    rows.push(["Missed question",e.date,SUBJECTS[e.sub].name,e.day,strip(e.dayTitle),"","",e.secs,
+      strip(e.q)+(e.stem?" — "+strip(e.stem).replace(/\n/g," "):""),
+      e.picks.map(strip).join(" | "),strip(e.correct),e.tries,
+      e.helped?"Yes":"No",e.helpFirst?"Yes":"No"]);
+  });
+  return rows;
+}
+function pending(){ return DB.sessions.filter(x=>x.sid&&!x.sent); }
+
+async function syncSheet(quiet){
+  if(!DB.sheetUrl) return {ok:false,why:"no url"};
+  const todo=pending();
+  if(!todo.length) return {ok:true,sent:0};
+  let rows=[];
+  todo.forEach(x=>{ rows=rows.concat(rowsFor(x)); });
+  try{
+    await fetch(DB.sheetUrl,{
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({key:DB.sheetKey||"",rows})
+    });
+    todo.forEach(x=>x.sent=true);
+    await save();
+    return {ok:true,sent:todo.length,rows:rows.length};
+  }catch(e){ return {ok:false,why:String(e)}; }
+}
+
+function csv(){
+  const q=v=>{ const t=String(v==null?"":v).replace(/<[^>]+>/g,"").replace(/"/g,'""'); return /[",\n]/.test(t)?'"'+t+'"':t; };
+  const rows=[["Type","Date","Subject","Day","Section","Score","OutOf","Seconds","Question","HeChose","CorrectAnswer","WrongTries","UsedHelp","HelpBeforeTrying"]];
+  DB.sessions.forEach(x=>rows.push(["Session",x.date,SUBJECTS[x.sub].name,x.day,x.dayTitle,x.score,x.total,x.secs,"","","","","",""]));
+  DB.errors.forEach(e=>rows.push(["Missed question",e.date,SUBJECTS[e.sub].name,e.day,e.dayTitle,"","",e.secs,
+    (e.q+(e.stem?" — "+e.stem.replace(/\n/g," "):"")),e.picks.join(" | "),e.correct,e.tries,e.helped?"Yes":"No",e.helpFirst?"Yes":"No"]));
+  return rows.map(r=>r.map(q).join(",")).join("\n");
 }
 
 function report(){
