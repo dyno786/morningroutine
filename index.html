@@ -265,6 +265,20 @@
   .k2 b{display:block;font-family:Fredoka,sans-serif;font-size:1.45rem;line-height:1.15}
   .k2 span{font-size:.68rem;color:var(--soft);line-height:1.25;display:block;margin-top:2px}
   .chartcard{margin-top:12px}
+  .hgroup{margin-top:14px}
+  .hdate{font-size:.72rem;font-weight:700;letter-spacing:.05em;color:var(--soft);
+    text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .hrow{display:flex;align-items:center;gap:10px;border-left:5px solid var(--line);
+    background:#F9FCFF;border-radius:0 11px 11px 0;padding:10px 12px;margin-top:8px}
+  .hmain{flex:1;min-width:0}
+  .hmain b{font-size:.95rem}
+  .hsub{font-size:.82rem;color:var(--soft);margin-top:1px}
+  .hmeta{font-size:.74rem;color:var(--soft);margin-top:3px}
+  .hchip{display:inline-block;background:#E8F3FF;color:#1D6FA8;border-radius:20px;
+    padding:2px 8px;font-size:.68rem;font-weight:600;margin-left:6px;vertical-align:1px}
+  .hchip.grey{background:#EEF2F6;color:#7E93A8}
+  .hscore{font-family:Fredoka,sans-serif;font-size:1.5rem;font-weight:600;line-height:1;white-space:nowrap}
+  .hscore small{font-size:.85rem;opacity:.65}
   .ct{font-family:Fredoka,sans-serif;font-size:1.02rem;font-weight:600}
   .cs{font-size:.8rem;color:var(--soft);margin:3px 0 8px}
   .cv{width:100%;height:auto;display:block;overflow:visible}
@@ -1833,11 +1847,74 @@ function stack(parts,total){
   return out+"</svg>";
 }
 
+function dayKey(ms){ return new Date(ms).toISOString().slice(0,10); }
+
+function streak(){
+  const days=[...new Set(DB.sessions.filter(x=>x.stamp).map(x=>dayKey(x.stamp)))].sort().reverse();
+  if(!days.length) return 0;
+  let n=0, cur=new Date(); cur.setHours(12,0,0,0);
+  const iso=d=>d.toISOString().slice(0,10);
+  if(days[0]!==iso(cur)){ cur.setDate(cur.getDate()-1); if(days[0]!==iso(cur)) return 0; }
+  for(const d of days){ if(d===iso(cur)){ n++; cur.setDate(cur.getDate()-1);} else break; }
+  return n;
+}
+
+function historyView(){
+  const all=DB.sessions.slice().reverse();
+  if(!all.length) return "";
+
+  /* how many times each day has been attempted, so repeats can show improvement */
+  const seen={};
+  const withAttempt=DB.sessions.map(x=>{
+    const k=x.sub+":"+x.day; seen[k]=(seen[k]||0)+1;
+    return Object.assign({},x,{attempt:seen[k]});
+  }).reverse();
+
+  /* group by date */
+  const groups=[];
+  withAttempt.forEach(x=>{
+    const g=groups.find(g=>g.date===x.date);
+    (g?g.items:(groups.push({date:x.date,items:[]}),groups[groups.length-1].items)).push(x);
+  });
+
+  return `<div class="card chartcard">
+    <h3 class="ct">Day by day</h3>
+    <p class="cs">Every session, newest first. Unfinished ones are shown too.</p>
+    ${groups.map(g=>`
+      <div class="hgroup">
+        <div class="hdate">${esc2(g.date)}</div>
+        ${g.items.map(x=>{
+          const pct=x.total?Math.round(100*x.score/x.total):0;
+          const wrong=DB.errors.filter(e=>e.sid&&e.sid===x.sid);
+          const helped=wrong.filter(e=>e.helped).length;
+          const tries=wrong.reduce((a,e)=>a+e.tries,0);
+          return `<div class="hrow" style="border-left-color:${x.partial?CH.grey:band(pct)}">
+            <div class="hmain">
+              <b>${SUBJECTS[x.sub].name} Day ${x.day}</b>
+              ${x.attempt>1?`<span class="hchip">attempt ${x.attempt}</span>`:""}
+              ${x.partial?`<span class="hchip grey">stopped early</span>`:""}
+              <div class="hsub">${esc2(x.dayTitle)}</div>
+              <div class="hmeta">
+                ${Math.round(x.secs/60)} min ${x.secs%60}s
+                ${tries?` · ${tries} wrong ${tries===1?"try":"tries"}`:" · clean run"}
+                ${helped?` · ${helped} needed the breakdown`:""}
+              </div>
+            </div>
+            <div class="hscore" style="color:${x.partial?"#7E93A8":band(pct)}">
+              ${x.score}<small>/${x.total}</small>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>`).join("")}
+  </div>`;
+}
+
 function progressView(){
   const S1=DB.sessions, E=DB.errors;
   if(!S1.length) return `<div class="card"><h2>Progress</h2>
     <p class="sub">Nothing to show yet. Finish a day and the charts appear here.</p></div>`;
 
+  const done=S1.filter(x=>!x.partial);
   const q=S1.reduce((a,x)=>a+x.total,0);
   const right=S1.reduce((a,x)=>a+x.score,0);
   const secs=S1.reduce((a,x)=>a+x.secs,0);
@@ -1870,10 +1947,11 @@ function progressView(){
                   .sort((a,b)=>a.v-b.v);
 
   const kpi=[
-    {n:S1.length,l:"days done",c:CH.blue},
+    {n:done.length,l:"days finished",c:CH.blue},
     {n:acc+"%",l:"right first time",c:band(acc)},
     {n:Math.round(secs/60),l:"minutes total",c:CH.violet},
-    {n:E.length,l:"questions missed",c:E.length?CH.amber:CH.green}
+    {n:E.length,l:"questions missed",c:E.length?CH.amber:CH.green},
+    {n:streak(),l:streak()===1?"day in a row":"days in a row",c:streak()>=3?CH.green:CH.blue}
   ];
 
   const worst=secRows.slice(0,2).map(r=>r.l).join(" and ");
@@ -1918,7 +1996,8 @@ function progressView(){
   ${secRows.length>1?`<div class="card"><h3 class="ct">In a sentence</h3>
     <p style="font-size:.95rem;margin-top:6px">Strongest so far is <b>${esc2(best)}</b>.
     Weakest is <b>${esc2(worst)}</b>. He has answered <b>${q}</b> questions,
-    got <b>${right}</b> right first time, and needed <b>${tries}</b> wrong attempts along the way.</p></div>`:""}`;
+    got <b>${right}</b> right first time, and needed <b>${tries}</b> wrong attempts along the way.</p></div>`:""}
+  ${historyView()}`;
 }
 
 function home(){
@@ -2045,7 +2124,18 @@ function render(){
   </div>`;
   [...el("opts").children].forEach(b=>b.onclick=()=>pick(+b.dataset.n));
   el("primary").onclick=submit;
-  el("stop").onclick=()=>{clearInterval(tick);home()};
+  el("stop").onclick=async()=>{
+    clearInterval(tick);
+    if(qi>0){
+      const secs=Math.round((Date.now()-t0)/1000);
+      DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:qi,
+                        secs:secs,date:today(),stamp:Date.now(),partial:true});
+      await save();
+      await enqueue(["Stopped early",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
+                     got,qi,secs,"","","","","",""]);
+    }
+    home();
+  };
   drawHelpButton(false);
   clock();
 }
@@ -2105,8 +2195,9 @@ async function finish(){
   clearInterval(tick);
   const total=S.d.qs.length, secs=Math.round((Date.now()-t0)/1000);
   const b=DB.best[S.sub];
-  if(b[S.i]==null||got>b[S.i]) b[S.i]=got;
-  DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,date:today()});
+  if(b[S.i]==null||got>b[S.i]) b[S.i]=got;   // finished runs only
+  DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,
+                    date:today(),stamp:Date.now()});
   await save();
   await enqueue(["Session",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
                  got,total,secs,"","","","","",""]);
