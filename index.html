@@ -259,6 +259,20 @@
   .hopt:disabled{cursor:default}
   .hhint{margin-top:10px;background:#fff;border-left:4px solid var(--sun);border-radius:0 9px 9px 0;
     padding:10px 12px;font-size:.88rem;color:#6B5200}
+  .tab.on.p{background:linear-gradient(135deg,#FF9F1C,#FF5B4A);box-shadow:0 3px 0 #D9791A}
+  .kpis2{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px;margin-top:14px}
+  .k2{background:#F7FBFF;border-radius:12px;padding:11px 10px;text-align:center}
+  .k2 b{display:block;font-family:Fredoka,sans-serif;font-size:1.45rem;line-height:1.15}
+  .k2 span{font-size:.68rem;color:var(--soft);line-height:1.25;display:block;margin-top:2px}
+  .chartcard{margin-top:12px}
+  .ct{font-family:Fredoka,sans-serif;font-size:1.02rem;font-weight:600}
+  .cs{font-size:.8rem;color:var(--soft);margin:3px 0 8px}
+  .cv{width:100%;height:auto;display:block;overflow:visible}
+  .cv .ax{font-family:Lexend,sans-serif;font-size:9px;fill:#6C8099}
+  .cv .ax2{font-family:Lexend,sans-serif;font-size:8px;fill:#93A7BC}
+  .cv .vl{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;fill:#16294A}
+  .key2{display:flex;flex-wrap:wrap;gap:12px;font-size:.75rem;color:var(--soft);margin-top:8px}
+  .key2 i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
   .mtabs{display:flex;gap:6px;margin:16px 0 0;flex-wrap:wrap}
   .mtab{flex:1;min-width:96px;background:#fff;border:2px solid var(--line);border-radius:11px;
         padding:10px 8px;font:inherit;font-size:.8rem;font-weight:600;color:var(--soft);cursor:pointer;text-align:center}
@@ -1693,7 +1707,7 @@ const SUBJECTS={
 };
 const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[]};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
-let SUB="maths";
+let SUB="maths", VIEW="days";
 
 /* run state */
 let S=null, qi=0, sel=[], answered=false, tries=0, picks=[], got=0;
@@ -1747,17 +1761,189 @@ async function save(){
 }
 
 /* ------------------------------- HOME -------------------------------- */
+
+/* =======================================================================
+   PROGRESS — charts drawn as plain SVG, no libraries, works offline
+   ======================================================================= */
+const CH={ blue:"#2E9BD6", teal:"#00B3C8", violet:"#8B5CF6", green:"#16C172",
+           amber:"#FF9F1C", red:"#FF5B4A", grey:"#C9D8E8" };
+
+function band(v){ return v<35?CH.red:v<55?CH.amber:CH.green; }
+function esc2(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+/* vertical bars */
+function barsV(rows,opts){
+  opts=opts||{};
+  const W=340,H=170,padL=26,padB=34,padT=16;
+  if(!rows.length) return "";
+  const max=opts.max||Math.max(...rows.map(r=>r.v),1);
+  const n=rows.length, gap=4;
+  const bw=Math.max(8,Math.min(40,(W-padL-8-gap*(n-1))/n));
+  const plotH=H-padB-padT;
+  let out=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="cv">`;
+  [0,.5,1].forEach(f=>{
+    const y=padT+plotH*(1-f);
+    out+=`<line x1="${padL}" y1="${y}" x2="${W-6}" y2="${y}" stroke="#E3EDF8" stroke-width="1"/>`;
+    out+=`<text x="${padL-5}" y="${y+3.5}" text-anchor="end" class="ax">${Math.round(max*f)}</text>`;
+  });
+  rows.forEach((r,i)=>{
+    const h=Math.max(2,plotH*(r.v/max));
+    const x=padL+6+i*(bw+gap), y=padT+plotH-h;
+    out+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="${r.c||CH.blue}"><title>${esc2(r.t||r.l+": "+r.v)}</title></rect>`;
+    if(r.top) out+=`<text x="${x+bw/2}" y="${y-4}" text-anchor="middle" class="vl">${r.top}</text>`;
+    out+=`<text x="${x+bw/2}" y="${H-padB+14}" text-anchor="middle" class="ax">${esc2(r.l)}</text>`;
+    if(r.l2) out+=`<text x="${x+bw/2}" y="${H-padB+25}" text-anchor="middle" class="ax2">${esc2(r.l2)}</text>`;
+  });
+  if(opts.line!=null&&opts.line<=max){
+    const y=padT+plotH*(1-opts.line/max);
+    out+=`<line x1="${padL}" y1="${y}" x2="${W-6}" y2="${y}" stroke="#8A98A8" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    out+=`<text x="${W-8}" y="${y-4}" text-anchor="end" class="ax2">${opts.lineLabel||""}</text>`;
+  }
+  return out+"</svg>";
+}
+
+/* horizontal bars */
+function barsH(rows){
+  if(!rows.length) return "";
+  const W=340,rowH=26,padL=118,H=rows.length*rowH+12;
+  let out=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="cv">`;
+  rows.forEach((r,i)=>{
+    const y=6+i*rowH, w=Math.max(2,(W-padL-34)*(r.v/100));
+    out+=`<text x="${padL-6}" y="${y+13}" text-anchor="end" class="ax">${esc2(r.l.length>17?r.l.slice(0,16)+"…":r.l)}</text>`;
+    out+=`<rect x="${padL}" y="${y+3}" width="${W-padL-34}" height="14" rx="7" fill="#EDF3FA"/>`;
+    out+=`<rect x="${padL}" y="${y+3}" width="${w}" height="14" rx="7" fill="${r.c||band(r.v)}"><title>${esc2(r.l)}: ${r.v}%</title></rect>`;
+    out+=`<text x="${W-4}" y="${y+14}" text-anchor="end" class="vl">${r.v}%</text>`;
+  });
+  return out+"</svg>";
+}
+
+/* one stacked bar */
+function stack(parts,total){
+  if(!total) return "";
+  const W=340,H=44;
+  let x=0,out=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="cv">`;
+  parts.forEach(p=>{
+    const w=W*(p.v/total);
+    if(w>0){
+      out+=`<rect x="${x}" y="6" width="${w}" height="22" fill="${p.c}"><title>${esc2(p.l)}: ${p.v}</title></rect>`;
+      if(w>34) out+=`<text x="${x+w/2}" y="22" text-anchor="middle" class="vl" fill="#fff">${p.v}</text>`;
+      x+=w;
+    }
+  });
+  return out+"</svg>";
+}
+
+function progressView(){
+  const S1=DB.sessions, E=DB.errors;
+  if(!S1.length) return `<div class="card"><h2>Progress</h2>
+    <p class="sub">Nothing to show yet. Finish a day and the charts appear here.</p></div>`;
+
+  const q=S1.reduce((a,x)=>a+x.total,0);
+  const right=S1.reduce((a,x)=>a+x.score,0);
+  const secs=S1.reduce((a,x)=>a+x.secs,0);
+  const acc=q?Math.round(100*right/q):0;
+  const tries=E.reduce((a,x)=>a+x.tries,0);
+  const helped=E.filter(x=>x.helped).length;
+
+  /* per session */
+  const perDay=S1.map((x,i)=>({
+    l:(SUBJECTS[x.sub].name[0])+x.day, v:x.total?Math.round(100*x.score/x.total):0,
+    top:x.score+"/"+x.total, c:x.sub==="maths"?CH.teal:CH.violet,
+    t:SUBJECTS[x.sub].name+" Day "+x.day+" — "+x.dayTitle
+  }));
+  const perTime=S1.map(x=>({
+    l:(SUBJECTS[x.sub].name[0])+x.day, v:Math.round(x.secs/60*10)/10,
+    top:Math.round(x.secs/60)+"m", c:x.secs>DB.mins*60?CH.amber:CH.blue
+  }));
+  const perTries=S1.map(x=>{
+    const t=E.filter(e=>e.sub===x.sub&&e.day===x.day).reduce((a,e)=>a+e.tries,0);
+    return {l:(SUBJECTS[x.sub].name[0])+x.day, v:t, top:t?String(t):"", c:t?CH.red:CH.grey};
+  });
+
+  /* by section */
+  const sec={};
+  S1.forEach(x=>{
+    sec[x.dayTitle]=sec[x.dayTitle]||{s:0,t:0,sub:x.sub};
+    sec[x.dayTitle].s+=x.score; sec[x.dayTitle].t+=x.total;
+  });
+  const secRows=Object.keys(sec).map(k=>({l:k,v:sec[k].t?Math.round(100*sec[k].s/sec[k].t):0}))
+                  .sort((a,b)=>a.v-b.v);
+
+  const kpi=[
+    {n:S1.length,l:"days done",c:CH.blue},
+    {n:acc+"%",l:"right first time",c:band(acc)},
+    {n:Math.round(secs/60),l:"minutes total",c:CH.violet},
+    {n:E.length,l:"questions missed",c:E.length?CH.amber:CH.green}
+  ];
+
+  const worst=secRows.slice(0,2).map(r=>r.l).join(" and ");
+  const best=secRows.slice(-1).map(r=>r.l).join("");
+
+  return `<div class="card">
+    <h2>Progress</h2>
+    <p class="sub">Everything he has done so far. Tap a bar to see what it was.</p>
+    <div class="kpis2">${kpi.map(k=>
+      `<div class="k2" style="border-top:4px solid ${k.c}"><b style="color:${k.c}">${k.n}</b><span>${k.l}</span></div>`).join("")}</div>
+  </div>
+
+  <div class="card chartcard"><h3 class="ct">How he scored each day</h3>
+    <p class="cs">Percentage right first time. Teal is maths, violet is English.</p>
+    ${barsV(perDay,{max:100})}</div>
+
+  <div class="card chartcard"><h3 class="ct">Minutes per session</h3>
+    <p class="cs">Dashed line is the ${DB.mins}-minute target. Amber means he went over.</p>
+    ${barsV(perTime,{line:DB.mins,lineLabel:DB.mins+" min"})}</div>
+
+  <div class="card chartcard"><h3 class="ct">Wrong tries each day</h3>
+    <p class="cs">How many times he picked a wrong answer before getting there. Grey means none.</p>
+    ${barsV(perTries)}</div>
+
+  <div class="card chartcard"><h3 class="ct">Accuracy by section — weakest first</h3>
+    <p class="cs">Red under 35%, amber to 55%, green above. This is the list for a teacher.</p>
+    ${barsH(secRows)}</div>
+
+  <div class="card chartcard"><h3 class="ct">Right first time, or not</h3>
+    ${stack([
+      {l:"Right first time",v:right,c:CH.green},
+      {l:"Got there after a retry",v:Math.max(0,E.length-helped),c:CH.amber},
+      {l:"Needed the breakdown",v:helped,c:CH.red}
+    ],q)}
+    <div class="key2">
+      <span><i style="background:${CH.green}"></i>right first time (${right})</span>
+      <span><i style="background:${CH.amber}"></i>after a retry (${Math.max(0,E.length-helped)})</span>
+      <span><i style="background:${CH.red}"></i>needed the breakdown (${helped})</span>
+    </div>
+  </div>
+
+  ${secRows.length>1?`<div class="card"><h3 class="ct">In a sentence</h3>
+    <p style="font-size:.95rem;margin-top:6px">Strongest so far is <b>${esc2(best)}</b>.
+    Weakest is <b>${esc2(worst)}</b>. He has answered <b>${q}</b> questions,
+    got <b>${right}</b> right first time, and needed <b>${tries}</b> wrong attempts along the way.</p></div>`:""}`;
+}
+
 function home(){
   paint();
   const s=SUBJECTS[SUB], best=DB.best[SUB]||{};
   const doneN=Object.keys(best).length;
+  const tabs=`<div class="tabs">
+      ${Object.values(SUBJECTS).map(x=>`<button class="tab ${x.cls} ${VIEW==="days"&&x.key===SUB?"on":""}" data-sub="${x.key}">
+        ${x.name}<span class="c">${Object.keys(DB.best[x.key]||{}).length} of ${x.days.length} done</span></button>`).join("")}
+      <button class="tab p ${VIEW==="progress"?"on":""}" data-sub="progress">Progress<span class="c">charts</span></button>
+    </div>`;
+
+  if(VIEW==="progress"){
+    el("home").innerHTML=`<div class="card"><h1>Morning practice</h1>${tabs}</div>`+progressView();
+    document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+      if(b.dataset.sub==="progress"){VIEW="progress";} else {VIEW="days";SUB=b.dataset.sub;}
+      home();
+    });
+    show("home"); return;
+  }
+
   let out=`<div class="card">
     <h1>Morning practice</h1>
     <p class="sub">Ten minutes a day. Pick today's card, read the method together, then six questions. Nothing moves on until the answer is right.</p>
-    <div class="tabs">
-      ${Object.values(SUBJECTS).map(x=>`<button class="tab ${x.cls} ${x.key===SUB?"on":""}" data-sub="${x.key}">
-        ${x.name}<span class="c">${Object.keys(DB.best[x.key]||{}).length} of ${x.days.length} done</span></button>`).join("")}
-    </div>
+    ${tabs}
     <p class="sub" style="margin:0">${doneN?`${doneN} ${s.name.toLowerCase()} mornings finished. Everything is saved.`:`Start with Day 1.`}</p>
   </div>`;
 
@@ -1774,7 +1960,10 @@ function home(){
   out+="</div>";
 
   el("home").innerHTML=out;
-  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{SUB=b.dataset.sub;home()});
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+    if(b.dataset.sub==="progress"){VIEW="progress";} else {VIEW="days";SUB=b.dataset.sub;}
+    home();
+  });
   document.querySelectorAll(".day").forEach(b=>b.onclick=()=>brief(+b.dataset.i));
   show("home");
 }
