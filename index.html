@@ -7,16 +7,19 @@
 
 <style>
   :root{
-    --bg:#F1F6FC; --card:#FFFFFF; --ink:#1B2A41; --soft:#63758C;
-    --line:#DCE6F2;
-    --maths:#0E9AA7; --maths-soft:#E2F4F6;
-    --eng:#7B5CD6; --eng-soft:#EFEAFC;
-    --win:#17A673; --win-soft:#E3F6EE;
-    --oops:#E4572E; --oops-soft:#FDECE6;
-    --sun:#FFC93C;
+    --bg:#F2F7FF; --card:#FFFFFF; --ink:#16294A; --soft:#63758C;
+    --line:#D9E6F5;
+    --maths:#00B3C8; --maths-soft:#DFF7FA;
+    --eng:#8B5CF6; --eng-soft:#F0E9FF;
+    --win:#16C172; --win-soft:#DFFAEE;
+    --oops:#FF5B4A; --oops-soft:#FFECE9;
+    --sun:#FFCE1F;
+    --w1:#FF6B6B; --w2:#FF9F1C; --w3:#2EC4B6; --w4:#8B5CF6;
     --accent:var(--maths); --accent-soft:var(--maths-soft);
   }
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:rgba(0,0,0,.05)}
+  button{touch-action:manipulation}
+  @media (max-width:400px){ .rnd{width:46px;height:46px} .btn{padding:14px 18px} }
   html,body{background:var(--bg)}
   body{
     font-family:Lexend,system-ui,sans-serif;color:var(--ink);line-height:1.55;
@@ -45,9 +48,10 @@
 
   /* ---- day tiles ---- */
   .week{margin:20px 0 8px;font-size:.78rem;font-weight:700;letter-spacing:.04em;color:var(--accent)}
-  .days{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+  .days{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
   .day{
-    background:#fff;border:2px solid var(--line);border-radius:14px;padding:13px 14px;
+    background:#fff;border:2px solid var(--line);border-left-width:8px;border-radius:14px;
+    padding:13px 14px;min-height:74px;
     text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative;
   }
   .day:hover{border-color:var(--accent)}
@@ -156,6 +160,112 @@
   .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .hr{height:1px;background:var(--line);margin:20px 0}
   .foot{text-align:center;margin-top:18px}
+
+  /* ---- explainer ---- */
+  .sum{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0 6px;flex-wrap:wrap}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-family:'JetBrains Mono',monospace;font-size:1.9rem}
+  .frac .top{padding:0 8px 3px}
+  .frac .bot{padding:3px 8px 0;border-top:4px solid var(--ink)}
+  .frac .top.lit{color:var(--oops)}
+  .frac .bot.lit{color:#4DABF7}
+  .of{font-family:Fredoka;font-size:1.3rem;color:var(--soft)}
+  .tot{font-family:'JetBrains Mono',monospace;font-size:2.1rem;font-weight:700}
+  .eq{font-family:'JetBrains Mono',monospace;font-size:2.1rem;font-weight:700;color:var(--win);transition:opacity .3s}
+  .eq.hide{opacity:0}
+
+  .xstage{position:relative;margin:12px 0 4px;transition:height .4s ease}
+  .grp{position:absolute;border:3px dashed var(--line);border-radius:14px;background:#FBFDFF;opacity:0;transform:scale(.9);transition:all .45s cubic-bezier(.2,.9,.3,1.3)}
+  .grp.on{opacity:1;transform:scale(1)}
+  .grp.take{border-style:solid;box-shadow:0 4px 0 rgba(22,39,61,.07)}
+  .grp.drop{opacity:.28}
+  .glab{position:absolute;left:50%;transform:translateX(-50%);bottom:3px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.82rem;color:var(--soft);opacity:0;transition:opacity .3s}
+  .glab.on{opacity:1}
+  .tick{position:absolute;top:-11px;right:-11px;width:25px;height:25px;border-radius:50%;background:var(--win);color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:700;opacity:0;transform:scale(.4);transition:all .35s cubic-bezier(.2,.9,.3,1.5)}
+  .tick.on{opacity:1;transform:scale(1)}
+  .dot{position:absolute;border-radius:50%;background:#4DABF7;transition:transform .65s cubic-bezier(.2,.85,.3,1),background .4s,opacity .4s;will-change:transform}
+  .dot.dim{opacity:.25;background:#B7C6D6}
+
+  .sq{position:absolute;border-radius:4px;background:#E4EDF7;transition:background .35s,opacity .35s,transform .35s}
+  .sq.lit{background:#FFA94D}
+  .sq.rowlit{background:#4DABF7;transform:scale(1.06)}
+  .sq.dim{opacity:.4}
+  .rowlab{position:absolute;left:0;right:0;text-align:center;font-size:.88rem;color:var(--soft)}
+
+  #xSvg .ghost{fill:none;stroke:#8FA8C0;stroke-width:2.5;stroke-dasharray:7 6;opacity:0;transition:opacity .4s}
+  #xSvg .shapeA{fill:#4DABF7;fill-opacity:.85;stroke:#1D6FA8;stroke-width:2.5;transition:fill .4s}
+  #xSvg .shapeA.win{fill:#51CF66;stroke:#2B8A45}
+  #xSvg .shapeB{fill:#FFA94D;fill-opacity:.8;stroke:#C87613;stroke-width:2.5;opacity:0;transition:transform .95s cubic-bezier(.3,.8,.3,1),opacity .4s}
+  #xSvg .cut{stroke:#E4572E;stroke-width:3;stroke-dasharray:8 6;opacity:0;transition:opacity .3s}
+  #xSvg .dim1{stroke:var(--soft);stroke-width:1.5}
+  #xSvg .dtxt{font-family:Lexend;font-size:12px;fill:var(--soft)}
+  #xSvg .trap{font-family:Lexend;font-size:11px;fill:var(--oops);transition:opacity .3s}
+
+  .say{background:#FFF8DC;border-left:6px solid var(--sun);border-radius:0 14px 14px 0;padding:14px 16px;margin-top:12px;font-size:1.02rem;line-height:1.5;min-height:70px}
+  .say .hot{color:var(--oops)} .say .sky{color:#1D6FA8}
+  .go{flex:1;min-width:140px;background:var(--win);color:#fff;font-family:Fredoka;font-size:1.05rem;font-weight:600;padding:15px 18px;border-radius:14px;border:none;box-shadow:0 4px 0 #127A53;cursor:pointer}
+  .go:active{transform:translateY(3px);box-shadow:0 1px 0 #127A53}
+  .go.pause{background:var(--sun);color:#5C4400;box-shadow:0 4px 0 #D9AE00}
+  .rnd{width:50px;height:50px;border-radius:14px;background:#fff;border:2px solid var(--line);font-size:1.1rem;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+  .rnd:disabled{opacity:.35;cursor:not-allowed}
+  .rnd.on{background:#4DABF7;border-color:#4DABF7;color:#fff}
+  .steps{display:flex;gap:5px;justify-content:center;margin-top:12px}
+  .pip{width:24px;height:6px;border-radius:3px;background:var(--line)}
+  .pip.on{background:#4DABF7} .pip.past{background:#A8CFF0}
+
+  .written{margin-top:14px;background:#F4F9FF;border-radius:14px;padding:16px;display:none}
+  .written.on{display:block}
+  .line{font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:700;white-space:nowrap;overflow:hidden;width:0;margin:6px 0}
+  .line.draw{animation:write 1.1s steps(26,end) forwards}
+  .line.l2{animation-delay:1.2s}
+  @keyframes write{to{width:100%}}
+  .line .skyt{color:#1D6FA8} .line .hott{color:var(--oops)} .line .grn{color:var(--win)}
+  @media (prefers-reduced-motion:reduce){ .line{width:100%;animation:none} .dot,.grp,.tick,.sq,#xSvg *{transition:none} }
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.88rem;color:var(--ink);cursor:pointer}
+  .chip.on{background:#4DABF7;border-color:#4DABF7;color:#fff}
+  .lab{font-size:.76rem;font-weight:700;letter-spacing:.04em;color:var(--soft);margin:20px 0 8px}
+  .quiz{margin-top:14px;background:#fff;border-radius:18px;padding:18px 16px;box-shadow:0 3px 0 var(--line)}
+  .qask{font-family:Fredoka;font-size:1.12rem;font-weight:600}
+  .qopts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .qopt{flex:1;min-width:78px;background:#fff;border:2.5px solid var(--line);border-radius:14px;padding:15px 8px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem;color:var(--ink);cursor:pointer}
+  .qopt.right{background:var(--win-soft);border-color:var(--win);color:#12643F}
+  .qopt.wrong{background:var(--oops-soft);border-color:var(--oops);color:#8C2B18}
+  .qmsg{margin-top:12px;font-size:.93rem;padding:12px 14px;border-radius:12px;display:none}
+  .qmsg.on{display:block}
+  .qmsg.y{background:var(--win-soft);color:#12643F}
+  .qmsg.n{background:var(--oops-soft);color:#8C2B18}
+  .helpbtn{width:100%;margin-top:4px;background:#fff;border:2.5px dashed var(--sun);color:#8A6100;
+    border-radius:14px;padding:14px;font-family:Fredoka,sans-serif;font-size:1rem;font-weight:600;cursor:pointer}
+  .helpbtn:hover{background:#FFFBEF}
+  .helpbtn.urge{background:var(--sun);border-style:solid;color:#5C4400;box-shadow:0 3px 0 #D9AE00}
+  @media (prefers-reduced-motion:no-preference){ .helpbtn.urge{animation:nudge .5s ease-out} }
+  @keyframes nudge{0%{transform:scale(.97)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+  .helpbox{background:#FFFBEF;border:2px solid var(--sun);border-radius:16px;padding:15px 14px;margin-top:6px}
+  .helpbox.done{background:var(--win-soft);border-color:var(--win)}
+  .hhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    font-size:.72rem;font-weight:700;letter-spacing:.04em;color:#8A6100;margin-bottom:8px}
+  .helpbox.done .hhead{color:#0E7A50}
+  .hhead span{font-weight:500;letter-spacing:0;opacity:.75;text-align:right}
+  .hq{font-size:1.02rem;font-weight:500;line-height:1.45;margin-bottom:12px}
+  .hopts{display:flex;flex-direction:column;gap:7px}
+  .hopt{background:#fff;border:2px solid #F0E2BC;border-radius:11px;padding:13px 14px;
+    font:inherit;font-size:.95rem;text-align:left;color:var(--ink);cursor:pointer}
+  .hopt:hover:not(:disabled){border-color:var(--sun)}
+  .hopt.right{background:var(--win-soft);border-color:var(--win);color:#0E7A50;font-weight:600}
+  .hopt.wrong{background:var(--oops-soft);border-color:var(--oops);opacity:.7}
+  .hopt:disabled{cursor:default}
+  .hhint{margin-top:10px;background:#fff;border-left:4px solid var(--sun);border-radius:0 9px 9px 0;
+    padding:10px 12px;font-size:.88rem;color:#6B5200}
+  .mtabs{display:flex;gap:6px;margin:16px 0 0;flex-wrap:wrap}
+  .mtab{flex:1;min-width:96px;background:#fff;border:2px solid var(--line);border-radius:11px;
+        padding:10px 8px;font:inherit;font-size:.8rem;font-weight:600;color:var(--soft);cursor:pointer;text-align:center}
+  .mtab b{display:block;font-size:.7rem;font-weight:700;letter-spacing:.03em;opacity:.7}
+  .mtab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .mwhen{font-size:.82rem;color:var(--soft);margin-top:10px;padding-left:2px}
+  .monly{font-size:.82rem;color:var(--soft);margin-top:12px}
+  .explainbtn{width:100%;margin-top:12px;background:#fff;border:2.5px dashed #4DABF7;color:#1D6FA8;border-radius:14px;padding:15px;font-family:Fredoka;font-size:1.02rem;font-weight:600;cursor:pointer}
+  .explainbtn:hover{background:#EAF4FD}
 </style>
 
 <div class="wrap">
@@ -163,6 +273,7 @@
   <div id="brief" hidden></div>
   <div id="quiz" hidden></div>
   <div id="done" hidden></div>
+  <div id="explain" hidden></div>
   <div id="parent" hidden></div>
 </div>
 
@@ -577,6 +688,997 @@ const ENGLISH=[
  {a:"Tick the TWO present perfect sentences.",s:"",multi:true,o:["Amy bought some bread.","I have told him the truth.","Kimberly has breaked a window.","A flea has bitten my dog."],c:[1,3],h:"has/have plus a real participle.",w:"<i>Have told</i> and <i>has bitten</i>."}]}
 ];
 
+
+
+/* =======================================================================
+   METHODS — the different routes to the same answer.
+   Method 1 is always the one I'd teach first.
+   ======================================================================= */
+const METHODS={
+"maths:1":[
+ {n:"Divide, then multiply",when:"The default. Works for every fraction.",
+  rule:"Divide by the <b>bottom</b> number. Multiply by the <b>top</b> number.",
+  eg:["3/5 of 45\n   45 ÷ 5 = 9\n    9 × 3 = <b>27</b>"]},
+ {n:"Keep halving",when:"Quickest for halves, quarters and eighths.",
+  rule:"For a quarter, halve it <b>twice</b>. For an eighth, halve it <b>three times</b>. Then multiply by the top number.",
+  eg:["3/4 of 28\n   half of 28 = 14\n   half of 14 = 7   (that is 1/4)\n        7 × 3 = <b>21</b>"]},
+ {n:"Draw a bar",when:"When the numbers confuse him. Slower but it never lies.",
+  rule:"Draw a bar, chop it into as many chunks as the <b>bottom</b> number. Write the size of one chunk. Shade the <b>top</b> number of chunks.",
+  eg:["2/5 of 30\n   [6][6][6][6][6]  ← five chunks of 6\n   shade two → <b>12</b>"]}],
+
+"maths:2":[
+ {n:"Turn it into a fraction",when:"Best for 10, 20, 25, 50 and 75% — which is most SATs questions.",
+  rule:"Swap the percentage for its fraction, then it is exactly the same as Day 1.<br>50% = 1/2 · 25% = 1/4 · 75% = 3/4 · 20% = 1/5 · 10% = 1/10",
+  eg:["75% of £280\n   75% is 3/4\n   280 ÷ 4 = 70\n    70 × 3 = <b>£210</b>"]},
+ {n:"The 10% ladder",when:"For the awkward ones — 30%, 60%, 80%, 5%, 15%.",
+  rule:"Find <b>10%</b> by dividing by 10. Then build: double it for 20%, halve it for 5%, halve the whole thing for 50%.",
+  eg:["80% of 300 ml\n   10% = 30\n   80% = 30 × 8 = <b>240 ml</b>","75% of £280\n   10% = £28 → 50% = £140, 25% = £70\n   140 + 70 = <b>£210</b>"]},
+ {n:"The 1% unit",when:"The fallback for odd numbers like 37%. Hardest arithmetic — use last.",
+  rule:"Divide by <b>100</b> to find 1%. Then multiply by however many percent you need.",
+  eg:["75% of £280\n   280 ÷ 100 = £2.80   (1%)\n   2.80 × 75 = <b>£210</b>"]}],
+
+"maths:3":[
+ {n:"Simplify to one you know",when:"Fastest when the fraction cancels down neatly.",
+  rule:"Write it as a fraction, cancel it down, then use the ones you know by heart.",
+  eg:["12 out of 60\n   12/60 = 1/5\n   1/5 = <b>20%</b>"]},
+ {n:"Scale the bottom to 100",when:"When the bottom number divides into 100 — 50, 25, 20, 10, 4, 5.",
+  rule:"Multiply the bottom up to <b>100</b>, and do the same to the top. Per cent means out of a hundred, so the top is your answer.",
+  eg:["30 out of 50\n   × 2 top and bottom\n   60/100 = <b>60%</b>"]},
+ {n:"Divide and times by 100",when:"Always works, even with ugly numbers.",
+  rule:"Divide the part by the whole, then multiply by 100.",
+  eg:["12 out of 60\n   12 ÷ 60 = 0.2\n   0.2 × 100 = <b>20%</b>"]}],
+
+"maths:4":[
+ {n:"Each share, then take away",when:"The safest. Do one thing at a time.",
+  rule:"Work out each person's share <b>separately</b>. Then take them all off the total.",
+  eg:["30 bottles, Felix 2/5, Anita 3/10\n   Felix 12, Anita 9\n   30 − 12 − 9 = <b>9 left</b>"]},
+ {n:"Add the fractions first",when:"Fewer steps, if he is confident with denominators.",
+  rule:"Add the fractions taken, take that from <b>1 whole</b>, then find that fraction of the amount.",
+  eg:["2/5 + 3/10 = 4/10 + 3/10 = 7/10\n   left = 3/10\n   3/10 of 30 = <b>9</b>"]},
+ {n:"Draw the bar",when:"When two fractions in one question tangle him up.",
+  rule:"One bar for the whole amount, chopped into tenths. Shade Felix's, shade Anita's, count what is bare.",
+  eg:["30 bottles as ten chunks of 3\n   Felix 4 chunks, Anita 3 chunks\n   3 chunks bare = <b>9</b>"]}],
+
+"maths:5":[
+ {n:"Find one part first",when:"The default for any ratio or sharing question.",
+  rule:"Divide by the number of parts to get <b>one part</b>. Then multiply up to however many you need.",
+  eg:["4 parts make 24\n   24 ÷ 4 = 6\n   5 parts = 6 × 5 = <b>30</b>"]},
+ {n:"How many times bigger?",when:"Best for recipes and scaling a whole list at once.",
+  rule:"Work out the <b>scale factor</b> — how many times bigger the new amount is — then multiply everything by it.",
+  eg:["60 g per 100 ml → 350 ml\n   350 ÷ 100 = 3.5 times\n   60 × 3.5 = <b>210 g</b>"]},
+ {n:"Double and halve",when:"When the scale factor is 2, 2.5, 5 or a half — no long multiplication needed.",
+  rule:"Build it from doubling and halving instead of multiplying.",
+  eg:["8 km = 5 miles, so 4 km = ?\n   4 is half of 8\n   half of 5 = <b>2.5 miles</b>"]}],
+
+"maths:6":[
+ {n:"Pad with zeros",when:"The default. Makes every number the same length.",
+  rule:"Add zeros on the end until every number has the same digits after the point. Then read <b>left to right</b>.",
+  eg:["1.06 and 1.306\n   1.060\n   1.306\n   → <b>1.306 is bigger</b>"]},
+ {n:"Column by column",when:"Good when there are lots of numbers to put in order.",
+  rule:"Compare the <b>units</b> first. If they tie, compare the <b>tenths</b>. Then hundredths. Stop as soon as one wins.",
+  eg:["2.05  2.5  2.15  2.1\n   units all 2 → tenths: 0, 5, 1, 1\n   0 is smallest → <b>2.05</b>"]},
+ {n:"Put them in the same unit",when:"For money and measures mixed together.",
+  rule:"Change them all into <b>pence</b>, or all into <b>pounds</b>, before comparing anything.",
+  eg:["48p · £0.84 · 408p · £4.80\n   48 · 84 · 408 · 480 pence\n   → <b>48p is smallest</b>"]}],
+
+"maths:7":[
+ {n:"Column, points lined up",when:"The default, and what the mark scheme expects to see.",
+  rule:"Write them one under the other with the <b>points in a straight line</b>. Fill gaps with zeros.",
+  eg:["  13.70\n+  8.92\n -------\n  <b>22.62</b>"]},
+ {n:"Work in whole numbers",when:"For money. Removes the decimal point entirely.",
+  rule:"Turn everything into <b>pence</b> (or millimetres), do it as whole numbers, then convert back at the end.",
+  eg:["£13.70 + £8.92\n   1370 + 892 = 2262 pence\n   → <b>£22.62</b>"]},
+ {n:"Count on",when:"For subtractions with a near-round number, like £10.35 − £9.60.",
+  rule:"Start at the smaller number and <b>count up</b> to the bigger one. Add the hops.",
+  eg:["£9.60 → £10.00 is 40p\n   £10.00 → £10.35 is 35p\n   40 + 35 = <b>75p</b>"]}],
+
+"maths:8":[
+ {n:"Look at the next digit",when:"The default rule for every rounding question.",
+  rule:"Find the place you are rounding to, then look at the <b>very next digit</b>. 5 or more rounds up, 4 or less stays put.",
+  eg:["0.126 to 1 d.p.\n   next digit is 2 → down\n   → <b>0.1</b>"]},
+ {n:"Which is it nearer?",when:"When the rule feels arbitrary — this shows why it works.",
+  rule:"Write the two numbers it sits between. Ask which one it is <b>closer to</b>.",
+  eg:["736 to the nearest 10\n   730 ←― 736 ―→ 740\n   6 away vs 4 away → <b>740</b>"]},
+ {n:"Buying always rounds UP",when:"Boxes, packs, coaches, tins. Not really rounding — a different rule.",
+  rule:"If the question is about <b>buying enough</b>, always round up, even from .1. Part of a box is no use.",
+  eg:["4500 ÷ 200 = 22.5 boxes\n   22 is not enough\n   → <b>23 boxes</b>"]}],
+
+"maths:9":[
+ {n:"Ignore the point, put it back",when:"The default for multiplying decimals.",
+  rule:"Take the point out, multiply as whole numbers, then put the point back in the same place.",
+  eg:["£2.70 × 8\n   270 × 8 = 2160\n   → <b>£21.60</b>"]},
+ {n:"Split it up",when:"When he can do it in his head in two easy pieces.",
+  rule:"Break the number into its whole part and its decimal part, multiply each, then add.",
+  eg:["2.70 × 8\n   2 × 8 = 16\n   0.70 × 8 = 5.60\n   16 + 5.60 = <b>£21.60</b>"]},
+ {n:"Check it backwards",when:"Not a way of getting the answer — a way of catching a wrong one.",
+  rule:"After any division, <b>multiply your answer back</b>. If you do not land on the number you started with, it is wrong.",
+  eg:["74.83 ÷ 7 = 10.69?\n   10.69 × 7 = 74.83 ✓\n   10.59 × 7 = 74.13 ✗"]}],
+
+"maths:10":[
+ {n:"Mixed review",when:"No new methods today.",
+  rule:"Everything from the first two weeks, jumbled up. Use whichever method he settled on for each type — the point today is <b>spotting which kind of question it is</b>, not learning anything new.",
+  eg:["Fraction of an amount → ÷ bottom, × top","Percentage → fraction, or the 10% ladder","Decimals → line up the point"]}],
+
+"maths:11":[
+ {n:"Move the digits",when:"The default once he trusts it.",
+  rule:"Bigger unit → <b>divide</b>. Smaller unit → <b>multiply</b>. By 10, 100 or 1000 depending on the pair.",
+  eg:["15 cm into metres\n   100 cm = 1 m, so ÷ 100\n   → <b>0.15 m</b>"]},
+ {n:"Learn the four facts",when:"When he cannot remember which way round to go.",
+  rule:"Only four facts to know:<br>10 mm = 1 cm · 100 cm = 1 m · 1000 m = 1 km · 1000 g = 1 kg · 1000 ml = 1 litre.<br>Write the fact down first, then decide.",
+  eg:["193 oz, and 16 oz = 1 lb\n   193 ÷ 16 = 12 r 1\n   → <b>12 lb 1 oz</b>"]},
+ {n:"Does it sound daft?",when:"A check, not a method. Catches the biggest mistakes.",
+  rule:"Look at the answer and ask if it could be real. A number in the wrong unit is usually <b>ridiculous</b>.",
+  eg:["A plant grew 15 m?\n   That is taller than a house.\n   → must be <b>0.15 m</b>"]}],
+
+"maths:12":[
+ {n:"What is one gap worth?",when:"The default for any scale, dial or number line.",
+  rule:"Find two <b>labelled</b> numbers. Count the gaps between them. Divide the difference by the number of gaps.",
+  eg:["2 to 2.25, five gaps\n   0.25 ÷ 5 = <b>0.05 each</b>"]},
+ {n:"Count on from a label",when:"When the arrow is near a labelled number.",
+  rule:"Start at the nearest labelled number and <b>hop</b> along, adding one gap at a time.",
+  eg:["from 2: 2.05, 2.10, <b>2.15</b>"]},
+ {n:"Take off the start",when:"For measuring something that does not begin at zero.",
+  rule:"Read where it <b>ends</b>, read where it <b>starts</b>, and subtract. Never just read the end.",
+  eg:["kitten runs 8 cm → 36 cm\n   36 − 8 = <b>28 cm</b>"]}],
+
+"maths:13":[
+ {n:"Learn the three formulas",when:"The default. Three lines to memorise.",
+  rule:"Rectangle: base × height.<br>Triangle: base × height <b>÷ 2</b>.<br>Parallelogram: base × <b>perpendicular</b> height, no halving.",
+  eg:["triangle, base 8, height 10\n   8 × 10 = 80\n   80 ÷ 2 = <b>40 cm²</b>"]},
+ {n:"Draw the rectangle round it",when:"When he cannot remember whether to halve.",
+  rule:"Box the triangle in with a rectangle. Work out the rectangle. The triangle is always <b>half</b> of it.",
+  eg:["triangle in an 8 × 10 box\n   box = 80\n   half of 80 = <b>40 cm²</b>"]},
+ {n:"Cut and slide",when:"For parallelograms. Kills the slanted-side mistake for good.",
+  rule:"Cut the triangle off one end and slide it round to the other. It becomes a <b>rectangle</b> — and now the height is obvious.",
+  eg:["parallelogram base 5, height 2\n   becomes a 5 × 2 rectangle\n   → <b>10 cm²</b>"]}],
+
+"maths:14":[
+ {n:"Split into rectangles",when:"The default for any L-shape.",
+  rule:"Chop the shape into rectangles, work out each one, and <b>add</b> them together.",
+  eg:["(7 × 4) + (2 × 1)\n   28 + 2 = <b>30 m²</b>"]},
+ {n:"Whole box, take the bite out",when:"When the missing piece is easier to see than the pieces left.",
+  rule:"Work out the <b>whole</b> rectangle as if the shape were complete, then subtract the missing corner.",
+  eg:["big box 8 × 4 = 32\n   missing corner 1 × 2 = 2\n   32 − 2 = <b>30 m²</b>"]},
+ {n:"Count the squares",when:"On squared paper. Slow but he will not get it wrong.",
+  rule:"Count whole squares. Put two halves together to make a whole. Works for any shape at all.",
+  eg:["30 squares, each 1 m²\n   → <b>30 m²</b>"]}],
+
+"maths:15":[
+ {n:"Mixed review",when:"No new methods today.",
+  rule:"Everything from this week together. The skill today is <b>choosing</b> which method the question needs — that is what the real paper tests.",
+  eg:["Unit change → the number must change too","Triangle → halve it. Parallelogram → do not.","Scale → work out one gap first"]}],
+
+"maths:16":[
+ {n:"Put the number in and work in order",when:"The default for substitution.",
+  rule:"Replace every letter with the number. Do the <b>squaring</b> first, then the <b>multiplying</b>, then the <b>adding</b>.",
+  eg:["n² + 3n, when n = 6\n   36 + 18 = <b>54</b>"]},
+ {n:"Say it out loud first",when:"For turning words into algebra — where he goes wrong.",
+  rule:"Say the sentence in plain words, then swap each bit for symbols. <b>Twice</b> means × 2. <b>More than</b> means +.",
+  eg:["three more than twice n\n   two lots of n, then add three\n   → <b>2n + 3</b>"]},
+ {n:"Try a number on it",when:"To check an expression is the right one.",
+  rule:"Pick an easy number like 10. Work out the answer in your head, then test each option.",
+  eg:["n = 10 → twice, add 3 = 23\n   2n + 3 gives 23 ✓\n   n + 3 gives 13 ✗"]}],
+
+"maths:17":[
+ {n:"Find the step / undo in reverse",when:"The default for sequences and think-of-a-number.",
+  rule:"For a sequence, subtract one term from the next to find the <b>step</b>. To work backwards, do the <b>opposite</b> operation, starting from the end.",
+  eg:["427, 537 → step is +110\n   647 + 110 = <b>757</b>","? + 25, ÷ 2, − 17 = 6\n   6 + 17 = 23, × 2 = 46, − 25 = <b>21</b>"]},
+ {n:"Test the options forwards",when:"In a multiple-choice question. Often faster than working backwards.",
+  rule:"Take each answer offered and run it <b>forwards</b> through the steps. Keep the one that lands on the right number.",
+  eg:["try 21: +25 = 46, ÷2 = 23, −17 = 6 ✓"]},
+ {n:"Times and divide come first",when:"Any calculation with mixed signs. This is a rule, not a choice.",
+  rule:"Brackets first, then <b>× and ÷</b>, then <b>+ and −</b>. Left to right is wrong and will cost the mark.",
+  eg:["88 − 20 × 4\n   20 × 4 = 80\n   88 − 80 = <b>8</b>"]}],
+
+"maths:18":[
+ {n:"Underline what it asks for",when:"The default, and worth about 8 marks a paper.",
+  rule:"Before working anything out, underline the words that say <b>what to find</b>: change, left, each, total, difference, how many boxes.",
+  eg:["spent £18.75, paid £20\n   underline <b>change</b>\n   20 − 18.75 = <b>£1.25</b>"]},
+ {n:"Write the label with the answer",when:"Stops him answering in the wrong unit.",
+  rule:"Never write a bare number. Write <b>what it is</b> next to it — boxes, km, change, mean. If the label does not match the question, it is wrong.",
+  eg:["4000 <b>metres</b> — but it asked for km\n   → <b>4 km</b>"]},
+ {n:"Could that be true?",when:"A last check before moving on.",
+  rule:"Look at the answer and ask if it is <b>sensible</b>. Half a box, change bigger than the note, a mean bigger than the total — all impossible.",
+  eg:["22.5 boxes — you cannot buy half\n   → <b>23</b>"]}],
+
+"maths:19":[
+ {n:"Fast pass, then come back",when:"The default way to sit a timed paper.",
+  rule:"Go through once answering everything easy. <b>Skip</b> anything that stalls you and put a dot beside it. Come back with the time left.",
+  eg:["26 marks were lost to blank boxes\nnearly all in the last three questions"]},
+ {n:"Estimate, then commit",when:"When he genuinely does not know how to do it.",
+  rule:"Round the numbers and do it roughly. Write that down. A close answer sometimes scores, and an empty box <b>never</b> does.",
+  eg:["4500 ÷ 200\n   about 45 ÷ 2 = about 20\n   → write <b>23</b>"]},
+ {n:"Show the working anyway",when:"On any question worth 2 marks.",
+  rule:"Write the calculation even if the final answer is wrong. Method marks are given for the <b>working</b>, not just the answer.",
+  eg:["£8.16 ÷ 6 =\n   even a wrong total can earn 1 of 2"]}],
+
+"maths:20":[
+ {n:"The real thing",when:"No method card today, on purpose.",
+  rule:"Sit this like the actual paper. Read each question twice, underline what it asks for, and <b>put something in every box</b>.",
+  eg:["No reminders. That is the test."]}]
+};
+
+/* =======================================================================
+   EXPLAINERS — animated, narrated worked examples
+   ======================================================================= */
+const COLS=["#FF6B6B","#FFA94D","#FFD43B","#51CF66","#4DABF7","#9775FA","#F783AC","#38D9A9","#A9E34B","#FF922B"];
+const NUM=["zero","one","two","three","four","five","six","seven","eight","nine","ten"];
+const DEN={2:["half","halves"],3:["third","thirds"],4:["quarter","quarters"],5:["fifth","fifths"],
+           6:["sixth","sixths"],8:["eighth","eighths"],10:["tenth","tenths"]};
+const fracWords=(a,b)=>{const d=DEN[b]||[b+"th",b+"ths"];return NUM[a]+" "+(a===1?d[0]:d[1])};
+const money=(v,u)=> u==="£" ? "£"+(Math.round(v*100)/100).toFixed(2) : (Math.round(v*100)/100)+(u?" "+u:"");
+const sayMoney=(v,u)=> u==="£" ? (v>=1? (Math.round(v*100)/100).toFixed(2)+" pounds" : Math.round(v*100)+" pence")
+                                : (Math.round(v*100)/100)+(u?" "+u:"");
+
+/* --------------------------- speech --------------------------------- */
+let VOICE=null, SOUND=true, sTimer=null;
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return;
+  const v=speechSynthesis.getVoices();
+  VOICE = v.find(x=>x.lang==="en-GB"&&/sonia|libby|kate|serena|daniel|george/i.test(x.name))
+       || v.find(x=>x.lang==="en-GB") || v.find(x=>x.lang&&x.lang.startsWith("en")) || null;
+}
+if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function speak(text,after){
+  if(!("speechSynthesis" in window)||!SOUND){ if(after) sTimer=setTimeout(after,3400); return; }
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  if(VOICE) u.voice=VOICE;
+  u.rate=.9; u.pitch=1.05; u.lang="en-GB";
+  u.onend=()=>{ if(after) sTimer=setTimeout(after,750); };
+  u.onerror=()=>{ if(after) sTimer=setTimeout(after,2600); };
+  speechSynthesis.speak(u);
+}
+function hush(){ clearTimeout(sTimer); if("speechSynthesis" in window) speechSynthesis.cancel(); }
+let sPrimed=false;
+function primeSpeech(){
+  if(sPrimed||!("speechSynthesis" in window)) return;
+  sPrimed=true;
+  try{ const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); }catch(e){}
+}
+document.addEventListener("touchstart",primeSpeech,{once:true,passive:true});
+document.addEventListener("click",primeSpeech,{once:true});
+
+/* ============ 1. FRACTIONS OF AN AMOUNT (maths day 1) ================ */
+const FRACTIONS={
+  title:"Fractions of an amount",
+  presets:[[3,5,45],[2,3,24],[3,4,28],[1,4,20],[2,5,30],[3,10,30]],
+  label:p=>`${p[0]}/${p[1]} of ${p[2]}`,
+  head:p=>`<div class="sum">
+      <span class="frac"><span class="top" id="xTop">${p[0]}</span><span class="bot" id="xBot">${p[1]}</span></span>
+      <span class="of">of</span><span class="tot">${p[2]}</span>
+      <span class="eq hide" id="xEq">= ${p[2]/p[1]*p[0]}</span></div>`,
+  build(stage,p){
+    const [a,b,T]=p, per=T/b;
+    const W=stage.clientWidth||330;
+    const gc=Math.ceil(Math.sqrt(per)), gr=Math.ceil(per/gc);
+    const rows=b<=5?1:2, perRow=Math.ceil(b/rows), gap=8, pad=6, labH=18;
+    const gw=Math.floor((W-gap*(perRow-1))/perRow);
+    const cell=Math.max(9,Math.min(26,Math.floor((gw-pad*2)/gc)));
+    const bw=gc*cell+pad*2, bh=gr*cell+pad*2+labH;
+    const rowW=perRow*bw+gap*(perRow-1), offX=Math.max(0,(W-rowW)/2);
+    const gpos=[], slots=[];
+    for(let g=0;g<b;g++){
+      const r=Math.floor(g/perRow), c=g%perRow;
+      const bx=offX+c*(bw+gap), by=r*(bh+gap);
+      gpos.push({x:bx,y:by});
+      for(let k=0;k<per;k++) slots.push({x:bx+pad+(k%gc)*cell, y:by+pad+Math.floor(k/gc)*cell});
+    }
+    const totH=Math.ceil(b/perRow)*bh+(Math.ceil(b/perRow)-1)*gap;
+    const pc=Math.min(T,Math.ceil(Math.sqrt(T*1.7))), pr=Math.ceil(T/pc);
+    const px=Math.max(0,(W-pc*cell)/2), py=Math.max(0,(totH-pr*cell)/2);
+    const pile=[];
+    for(let i=0;i<T;i++) pile.push({x:px+(i%pc)*cell, y:py+Math.floor(i/pc)*cell});
+
+    stage.style.height=totH+"px";
+    stage.innerHTML="";
+    gpos.forEach((q,g)=>{
+      const d=document.createElement("div"); d.className="grp";
+      d.style.cssText=`left:${q.x}px;top:${q.y}px;width:${bw}px;height:${bh}px;border-color:${COLS[g%COLS.length]}`;
+      d.innerHTML=`<span class="glab">${per}</span><span class="tick">✓</span>`;
+      stage.appendChild(d);
+    });
+    for(let i=0;i<T;i++){
+      const e=document.createElement("div"); e.className="dot";
+      e.style.cssText=`width:${cell-5}px;height:${cell-5}px;transition-delay:${(i%18)*14}ms`;
+      e.style.transform=`translate(${pile[i].x}px,${pile[i].y}px)`;
+      stage.appendChild(e);
+    }
+    stage._pile=pile; stage._slots=slots;
+  },
+  steps(p){
+    const [a,b,T]=p, per=T/b, ans=per*a, fw=fracWords(a,b), one=DEN[b]?DEN[b][0]:"part";
+    const count=[]; for(let i=1;i<=a;i++) count.push(per*i);
+    return [
+     {cap:`We want <b>${fw}</b> of <b>${T}</b>. Here are all ${T} counters.`,
+      say:`We want to find ${fw} of ${T}. Here are all ${T} counters.`},
+     {cap:`The <span class="sky"><b>bottom</b></span> number is <span class="sky"><b>${b}</b></span>. Share them into <span class="sky"><b>${b} equal groups</b></span>.`,
+      say:`The bottom number is ${b}. That tells us to share them into ${b} equal groups. Watch.`},
+     {cap:`Count one group: <b>${per}</b>. So one ${one} of ${T} is <b>${per}</b>.`,
+      say:`Now count one group. ${per}. So one ${one} of ${T} is ${per}.`},
+     {cap:`The <span class="hot"><b>top</b></span> number is <span class="hot"><b>${a}</b></span>. So <b>take ${a}</b> of those groups.`,
+      say:`The top number is ${a}. So we take ${a} of those groups, and leave the rest.`},
+     {cap:`${a} groups of ${per}. That makes <b>${ans}</b>.`,
+      say:`${a} groups of ${per}. ${count.join(", ")}. That makes ${ans}.`},
+     {cap:`So <b>${fw} of ${T} is ${ans}</b>. Divide by the bottom, multiply by the top. Every time.`,
+      say:`So ${fw} of ${T} is ${ans}. ${T} divided by ${b} is ${per}. ${per} times ${a} is ${ans}. Divide by the bottom, multiply by the top. It works every single time.`}
+    ];
+  },
+  apply(stage,p,phase){
+    const [a,b,T]=p, per=T/b;
+    const grps=[...stage.querySelectorAll(".grp")], dots=[...stage.querySelectorAll(".dot")];
+    const top=el("xTop"), bot=el("xBot"), eq=el("xEq");
+    if(top) top.className="top"+(phase>=3?" lit":"");
+    if(bot) bot.className="bot"+(phase>=1&&phase<3?" lit":"");
+    if(eq) eq.classList.toggle("hide",phase<4);
+    dots.forEach((d,i)=>{
+      const to = phase===0?stage._pile[i]:stage._slots[i];
+      d.style.transform=`translate(${to.x}px,${to.y}px)`;
+      const g=Math.floor(i/per);
+      d.style.background = phase===0?"#4DABF7":COLS[g%COLS.length];
+      d.classList.toggle("dim", phase>=3 && g>=a);
+    });
+    grps.forEach((g,i)=>{
+      g.classList.toggle("on",phase>=1);
+      g.querySelector(".glab").classList.toggle("on",phase>=2);
+      g.classList.toggle("take",phase>=3&&i<a);
+      g.classList.toggle("drop",phase>=3&&i>=a);
+      g.querySelector(".tick").classList.toggle("on",phase>=3&&i<a);
+    });
+  },
+  extra(p,phase){
+    if(phase<5) return "";
+    const [a,b,T]=p, per=T/b;
+    return `<div class="line draw"><span class="skyt">${T} ÷ ${b}</span> = ${per}</div>
+            <div class="line l2 draw"><span class="hott">${per} × ${a}</span> = <span class="grn">${per*a}</span></div>`;
+  },
+  quiz(p,all){
+    const n=all[(all.findIndex(x=>x.join()===p.join())+1)%all.length];
+    const [a,b,T]=n, per=T/b, ans=per*a;
+    return {ask:`Now you try — what is <b>${a}/${b} of ${T}</b>?`,
+            opts:[...new Set([ans,per,per*(a+1),T-ans,per*(a-1),T,T/2,ans+per].filter(v=>v>0&&Number.isInteger(v)))].slice(0,4),
+            ans, next:n,
+            why:`${T} ÷ ${b} = ${per}, then ${per} × ${a} = ${ans}.`,
+            miss:`Divide first: ${T} ÷ ${b} = ${per}. Then multiply by the top number, ${a}.`};
+  }
+};
+
+/* ============ 2. PERCENTAGES OF AN AMOUNT (maths day 2) ============== */
+const PERCENT={
+  title:"Percentages of an amount",
+  presets:[[10,6.80,"£"],[20,6.80,"£"],[50,90,""],[80,300,"ml"],[25,60,"£"],[75,280,"£"]],
+  label:p=>`${p[0]}% of ${p[2]==="£"?"£"+p[1].toFixed(2):p[1]}`,
+  head(p){const [P,T,U]=p; return `<div class="sum">
+      <span class="tot">${P}%</span><span class="of">of</span>
+      <span class="tot">${money(T,U)}</span>
+      <span class="eq hide" id="xEq">= ${money(T*P/100,U)}</span></div>`;},
+  build(stage,p){
+    const W=stage.clientWidth||330;
+    const cell=Math.floor((W-9*3)/10);
+    const size=Math.min(cell,30);
+    stage.innerHTML="";
+    stage.style.height=(size*10+9*3+26)+"px";
+    for(let i=0;i<100;i++){
+      const s=document.createElement("div");
+      s.className="sq";
+      s.style.cssText=`width:${size}px;height:${size}px;left:${(i%10)*(size+3)}px;top:${Math.floor(i/10)*(size+3)}px;transition-delay:${(i%10)*22}ms`;
+      stage.appendChild(s);
+    }
+    const l=document.createElement("div");
+    l.className="rowlab"; l.id="xRowLab";
+    l.style.top=(size*10+9*3+4)+"px";
+    stage.appendChild(l);
+    stage._size=size;
+  },
+  steps(p){
+    const [P,T,U]=p, row=T/10, ans=T*P/100;
+    const full=Math.floor(P/10), rem=P%10;
+    let build=`${row===Math.round(row)?row:row} times ${full} is ${Math.round(row*full*100)/100}`;
+    let cap3=`${full} full ${full===1?"row":"rows"}`+(rem?` and half a row`:"");
+    let say3=`That is ${full} full ${full===1?"row":"rows"}`+(rem?`, and half a row`:"")+`. `+
+             `${sayMoney(row,U)} times ${full} is ${sayMoney(row*full,U)}`+
+             (rem?`, plus half a row which is ${sayMoney(row/2,U)}`:"")+`. Altogether ${sayMoney(ans,U)}.`;
+    return [
+     {cap:`Here is the whole <b>${money(T,U)}</b>, drawn as <b>100 squares</b>.`,
+      say:`Here is the whole amount, ${sayMoney(T,U)}, drawn as 100 squares.`},
+     {cap:`10 rows, so <b>each row is 10%</b>. One row is ${money(T,U)} ÷ 10 = <b>${money(row,U)}</b>.`,
+      say:`There are 10 rows, so each row is 10 per cent. To find one row, divide by 10. ${sayMoney(T,U)} divided by 10 is ${sayMoney(row,U)}. Always find 10 per cent first.`},
+     {cap:`We need <b>${P}%</b>, so we colour in <b>${P} squares</b>.`,
+      say:`We need ${P} per cent, so we colour in ${P} squares out of the hundred.`},
+     {cap:`That is <b>${cap3}</b>.`, say:say3},
+     {cap:`So <b>${P}% of ${money(T,U)} is ${money(ans,U)}</b>.`,
+      say:`So ${P} per cent of ${sayMoney(T,U)} is ${sayMoney(ans,U)}.`},
+     {cap:`Find <b>10% first</b> by dividing by 10. Then build up to the number you need.`,
+      say:`Remember the trick. Find 10 per cent first by dividing by 10. Then build up. Double it for 20 per cent, halve it for 5 per cent. Never guess.`}
+    ];
+  },
+  apply(stage,p,phase){
+    const [P,T,U]=p, row=T/10;
+    const sq=[...stage.querySelectorAll(".sq")];
+    sq.forEach((s,i)=>{
+      const rowN=Math.floor(i/10);
+      s.classList.toggle("lit", phase>=2 && i<P);
+      s.classList.toggle("rowlit", phase===1 && rowN===0);
+      s.classList.toggle("dim", phase>=2 && i>=P);
+    });
+    const lab=el("xRowLab");
+    if(lab) lab.innerHTML = phase===1?`one row = 10% = <b>${money(row,U)}</b>`
+                          : phase>=3?`${P} squares coloured = <b>${money(T*P/100,U)}</b>`:"";
+    const eq=el("xEq"); if(eq) eq.classList.toggle("hide",phase<4);
+  },
+  extra(p,phase){
+    if(phase<5) return "";
+    const [P,T,U]=p, row=T/10, ans=T*P/100;
+    return `<div class="line draw"><span class="skyt">${money(T,U)} ÷ 10</span> = ${money(row,U)}  <span style="opacity:.6">(10%)</span></div>
+            <div class="line l2 draw"><span class="hott">${money(row,U)} × ${P/10}</span> = <span class="grn">${money(ans,U)}</span></div>`;
+  },
+  quiz(p,all){
+    const n=all[(all.findIndex(x=>x.join()===p.join())+1)%all.length];
+    const [P,T,U]=n, ans=T*P/100, row=T/10;
+    return {ask:`Now you try — what is <b>${P}% of ${money(T,U)}</b>?`,
+            opts:[...new Set([money(ans,U),money(row,U),money(T-ans,U),money(ans+row,U),money(T,U),money(row*2,U)])].slice(0,4),
+            ans:money(ans,U), next:n,
+            why:`10% is ${money(row,U)}, and ${P}% is ${P/10} lots of that = ${money(ans,U)}.`,
+            miss:`Find 10% first: ${money(T,U)} ÷ 10 = ${money(row,U)}. Then build up to ${P}%.`};
+  }
+};
+
+/* ============ 3. AREA OF TRIANGLES AND PARALLELOGRAMS (day 13) ======= */
+const AREA={
+  title:"Area of triangles and parallelograms",
+  presets:[["tri",8,10],["tri",6,4],["para",5,2],["para",6,3]],
+  label:p=>`${p[0]==="tri"?"triangle":"parallelogram"} ${p[1]}×${p[2]}`,
+  head(p){const [k,b,h]=p; const a=k==="tri"?b*h/2:b*h;
+    return `<div class="sum"><span class="of">${k==="tri"?"Triangle":"Parallelogram"}</span>
+      <span class="tot">${b}</span><span class="of">by</span><span class="tot">${h}</span>
+      <span class="eq hide" id="xEq">= ${a} cm²</span></div>`;},
+  build(stage,p){
+    const [k,b,h]=p;
+    const W=stage.clientWidth||330;
+    const pad=34, sc=Math.min((W-pad*2)/(b+2), 150/(h+1), 34);
+    const bw=b*sc, bh=h*sc;
+    const ox=(W-bw)/2, oy=26;
+    stage.style.height=(bh+80)+"px";
+    const sl=k==="para"?Math.min(bw*0.45,sc*1.6):0;
+    stage.innerHTML=`<svg id="xSvg" width="100%" height="${bh+80}" viewBox="0 0 ${W} ${bh+80}">
+      <rect id="xRect" x="${ox}" y="${oy}" width="${bw}" height="${bh}" class="ghost"/>
+      <polygon id="xB" class="shapeB" points="${k==="tri"
+          ? `${ox},${oy} ${ox+bw},${oy} ${ox},${oy+bh}`
+          : `${ox},${oy} ${ox+sl},${oy} ${ox+sl},${oy+bh} ${ox},${oy+bh}`}"/>
+      <polygon id="xA" class="shapeA" points="${k==="tri"
+          ? `${ox+bw},${oy} ${ox+bw},${oy+bh} ${ox},${oy+bh}`
+          : `${ox+sl},${oy} ${ox+bw+sl},${oy} ${ox+bw},${oy+bh} ${ox},${oy+bh}`}"/>
+      <line id="xCut" class="cut" x1="${ox+sl}" y1="${oy}" x2="${ox+sl}" y2="${oy+bh}"/>
+      <line class="dim1" x1="${ox}" y1="${oy+bh+16}" x2="${ox+bw}" y2="${oy+bh+16}"/>
+      <text class="dtxt" x="${ox+bw/2}" y="${oy+bh+34}" text-anchor="middle">base ${b} cm</text>
+      <line class="dim1" x1="${ox-14}" y1="${oy}" x2="${ox-14}" y2="${oy+bh}"/>
+      <text class="dtxt" x="${ox-18}" y="${oy+bh/2}" text-anchor="end" transform="rotate(-90 ${ox-18} ${oy+bh/2})">height ${h}</text>
+      ${k==="para"?`<text class="trap" id="xTrap" x="${ox+bw+sl/2+6}" y="${oy+bh/2}">slanted side — not the height</text>`:""}
+    </svg>`;
+    stage._g={ox,oy,bw,bh,sl,sc};
+  },
+  steps(p){
+    const [k,b,h]=p, box=b*h;
+    if(k==="tri") return [
+      {cap:`A triangle with base <b>${b} cm</b> and height <b>${h} cm</b>.`,
+       say:`Here is a triangle. Its base is ${b} centimetres and its height is ${h} centimetres.`},
+      {cap:`Draw a <b>rectangle</b> round it: ${b} × ${h} = <b>${box} cm²</b>.`,
+       say:`First, draw a rectangle around it. ${b} times ${h} is ${box} square centimetres.`},
+      {cap:`The leftover piece is <b>exactly the same size</b> as the triangle. Watch it spin over.`,
+       say:`Now look at the piece left over. It is exactly the same size as the triangle. Watch it spin round and land right on top.`},
+      {cap:`Two identical halves. So the triangle is <b>half the rectangle</b>.`,
+       say:`Two identical halves. So a triangle is always half of the rectangle around it.`},
+      {cap:`${box} ÷ 2 = <b>${box/2} cm²</b>.`,
+       say:`${box} divided by 2 is ${box/2} square centimetres.`},
+      {cap:`Base × height, <b>then halve it</b>. That is every triangle, always.`,
+       say:`So the rule is: base times height, then halve it. That works for every triangle, always.`}
+    ];
+    return [
+      {cap:`A parallelogram. Base <b>${b} cm</b>, straight-up height <b>${h} cm</b>.`,
+       say:`Here is a parallelogram. The base is ${b} centimetres and the straight up height is ${h} centimetres. Careful — the slanted side is longer, and it is a trap.`},
+      {cap:`<b>Cut</b> the triangle off this end.`,
+       say:`Watch this. Cut the triangle off this end, straight down.`},
+      {cap:`<b>Slide it round</b> to the other end.`,
+       say:`Now slide that piece all the way round to the other end.`},
+      {cap:`It is a <b>rectangle</b> now — same amount of space, easier shape.`,
+       say:`And now it is a rectangle. Exactly the same amount of space, just an easier shape to work with.`},
+      {cap:`${b} × ${h} = <b>${box} cm²</b>.`,
+       say:`${b} times ${h} is ${box} square centimetres.`},
+      {cap:`Base × <b>perpendicular</b> height. <b>Never</b> the slanted side.`,
+       say:`So the rule is: base times the straight up height. Never the slanted side. And there is no halving — that is only for triangles.`}
+    ];
+  },
+  apply(stage,p,phase){
+    const [k,b,h]=p, g=stage._g;
+    const rect=el("xRect"), A=el("xA"), B=el("xB"), cut=el("xCut"), trap=el("xTrap");
+    const eq=el("xEq"); if(eq) eq.classList.toggle("hide",phase<4);
+    if(!rect) return;
+    if(k==="tri"){
+      rect.style.opacity = phase>=1?1:0;
+      B.style.opacity = phase>=2?1:0;
+      B.style.transformOrigin=`${g.ox+g.bw/2}px ${g.oy+g.bh/2}px`;
+      B.style.transform = phase>=3?"rotate(180deg)":"rotate(0deg)";
+      cut.style.opacity = phase>=1&&phase<3?1:0;
+      A.setAttribute("class","shapeA"+(phase>=4?" win":""));
+    }else{
+      rect.style.opacity = phase>=3?1:0;
+      cut.style.opacity = phase>=1&&phase<3?1:0;
+      B.style.opacity = 1;
+      B.style.transform = phase>=2?`translateX(${g.bw}px)`:"translateX(0)";
+      A.setAttribute("class","shapeA"+(phase>=4?" win":""));
+      if(trap) trap.style.opacity = phase===0?1:0;
+    }
+  },
+  extra(p,phase){
+    if(phase<5) return "";
+    const [k,b,h]=p;
+    return k==="tri"
+      ? `<div class="line draw"><span class="skyt">${b} × ${h}</span> = ${b*h}</div>
+         <div class="line l2 draw"><span class="hott">${b*h} ÷ 2</span> = <span class="grn">${b*h/2} cm²</span></div>`
+      : `<div class="line draw"><span class="skyt">base × perpendicular height</span></div>
+         <div class="line l2 draw"><span class="hott">${b} × ${h}</span> = <span class="grn">${b*h} cm²</span></div>`;
+  },
+  quiz(p,all){
+    const n=all[(all.findIndex(x=>x.join()===p.join())+1)%all.length];
+    const [k,b,h]=n, ans=k==="tri"?b*h/2:b*h;
+    const cand=[ans,b*h,b*h/2,b+h,b*h+h,b*(h+1),2*(b+h)].filter(v=>v>0);
+    return {ask:`Now you try — the area of a <b>${k==="tri"?"triangle":"parallelogram"}</b> with base ${b} cm and height ${h} cm?`,
+            opts:[...new Set(cand.map(v=>v+" cm²"))].slice(0,4),
+            ans:ans+" cm²", next:n,
+            why:k==="tri"?`${b} × ${h} = ${b*h}, then halve it: ${ans} cm².`:`${b} × ${h} = ${ans} cm². No halving for a parallelogram.`,
+            miss:k==="tri"?`Multiply base by height, then halve it — a triangle is half its rectangle.`:`Base times the straight-up height. Do not halve it, and do not use the slanted side.`};
+  }
+};
+
+const EXPLAINERS={"maths:1":FRACTIONS,"maths:2":PERCENT,"maths:13":AREA};
+
+/* --------------------- explainer controller -------------------------- */
+let X=null;
+function openExplainer(def,dayN,backIdx){
+  hush();
+  X={def,p:def.presets[0],phase:0,playing:false,dayN,backIdx};
+  exShell(); show("explain");
+}
+function exShell(){
+  const d=X.def;
+  el("explain").innerHTML=`<div class="card">
+    <button class="link" id="xBack">← Back to Day ${X.dayN}</button>
+    <h1>${d.title}</h1>
+    <p class="sub">Press play and watch it happen. Sound on is better.</p>
+    ${d.head(X.p)}
+    <div id="xStage" class="xstage"></div>
+    <div class="say" id="xSay"></div>
+    <div class="ctrls">
+      <button class="rnd" id="xPrev" title="Step back">◀</button>
+      <button class="go" id="xPlay">▶  Play</button>
+      <button class="rnd" id="xNext" title="Step on">▶</button>
+      <button class="rnd ${SOUND?"on":""}" id="xSnd" title="Sound">${SOUND?"🔊":"🔇"}</button>
+      <button class="rnd" id="xAgain" title="Say that again">↻</button>
+    </div>
+    <div class="steps" id="xPips"></div>
+    <div class="written" id="xWritten"></div>
+    <div class="lab">TRY DIFFERENT NUMBERS</div>
+    <div class="chips" id="xChips">${d.presets.map((q,i)=>
+      `<button class="chip ${q.join()===X.p.join()?"on":""}" data-i="${i}">${d.label(q)}</button>`).join("")}</div>
+  </div>
+  <div class="quiz" id="xQuiz"></div>`;
+
+  el("xBack").onclick=()=>{hush();X.playing=false;brief(X.backIdx)};
+  el("xPlay").onclick=()=>X.playing?exStop():exStart();
+  el("xNext").onclick=()=>{exStop();exGo(X.phase+1)};
+  el("xPrev").onclick=()=>{exStop();exGo(X.phase-1)};
+  el("xAgain").onclick=()=>{hush();speak(X.def.steps(X.p)[X.phase].say)};
+  el("xSnd").onclick=()=>{SOUND=!SOUND;el("xSnd").textContent=SOUND?"🔊":"🔇";el("xSnd").classList.toggle("on",SOUND);if(!SOUND)hush()};
+  document.querySelectorAll("#xChips .chip").forEach(c=>c.onclick=()=>exLoad(X.def.presets[+c.dataset.i],true));
+  d.build(el("xStage"),X.p);
+  exPaint(); exQuiz();
+}
+function exLoad(p,autoplay){
+  hush(); X.p=p; X.phase=0; X.playing=false;
+  exShell();
+  if(autoplay) setTimeout(exStart,400);
+}
+function exPaint(){
+  const d=X.def, S=d.steps(X.p);
+  el("xSay").innerHTML=S[X.phase].cap;
+  d.apply(el("xStage"),X.p,X.phase);
+  const w=el("xWritten"), inner=d.extra(X.p,X.phase);
+  w.innerHTML=inner; w.classList.toggle("on",!!inner);
+  el("xPips").innerHTML=S.map((_,i)=>`<span class="pip ${i===X.phase?"on":i<X.phase?"past":""}"></span>`).join("");
+  el("xPrev").disabled=X.phase===0;
+  el("xNext").disabled=X.phase===S.length-1;
+}
+function exGo(n,talk){
+  const S=X.def.steps(X.p);
+  X.phase=Math.max(0,Math.min(S.length-1,n));
+  exPaint();
+  if(talk!==false) speak(S[X.phase].say, X.playing?()=>{
+    if(!X.playing) return;
+    if(X.phase<S.length-1) exGo(X.phase+1); else exStop();
+  }:null);
+}
+function exStop(){ X.playing=false; hush(); const b=el("xPlay"); if(b){b.textContent="▶  Play";b.classList.remove("pause")} }
+function exStart(){
+  X.playing=true;
+  const b=el("xPlay"); b.textContent="❚❚  Pause"; b.classList.add("pause");
+  if(X.phase===X.def.steps(X.p).length-1) X.phase=0;
+  exGo(X.phase);
+}
+function exQuiz(){
+  const q=X.def.quiz(X.p,X.def.presets);
+  const opts=q.opts.slice().sort(()=>Math.random()-.5);
+  el("xQuiz").innerHTML=`<div class="qask">${q.ask}</div>
+    <div class="qopts">${opts.map(o=>`<button class="qopt" data-v="${o}">${o}</button>`).join("")}</div>
+    <div class="qmsg" id="xQmsg"></div>`;
+  document.querySelectorAll("#xQuiz .qopt").forEach(btn=>btn.onclick=()=>{
+    const ok=String(btn.dataset.v)===String(q.ans);
+    btn.classList.add(ok?"right":"wrong");
+    const m=el("xQmsg");
+    m.className="qmsg on "+(ok?"y":"n");
+    m.innerHTML=(ok?`<b>Yes.</b> ${q.why}`:`<b>Not that one.</b> ${q.miss}`)+
+      ` <button class="chip" id="xSee" style="margin-top:10px">Watch it drawn</button>`;
+    if(ok) document.querySelectorAll("#xQuiz .qopt").forEach(x=>x.disabled=true);
+    el("xSee").onclick=()=>{exLoad(q.next,true);window.scrollTo({top:0,behavior:"smooth"})};
+  });
+}
+
+
+/* =======================================================================
+   SCAFFOLDS — after two wrong tries, break the question into small steps.
+   Never states the answer. Asks until he works it out himself.
+   ======================================================================= */
+function nOpts(ans,cands){
+  const out=[ans];
+  const add=c=>{ if(out.length<4&&Number.isFinite(c)&&c>=0&&!out.some(v=>Math.abs(v-c)<1e-9)) out.push(Math.round(c*1000)/1000); };
+  cands.forEach(add);
+  [ans+1,ans+2,ans+10,ans*2].forEach(add);   // always pad to four
+  return out;
+}
+const fmtN=(v,u)=> u==="£" ? "£"+(Math.round(v*100)/100).toFixed(2)
+                  : (Math.round(v*1000)/1000)+(u?" "+u:"");
+
+/* ---- step builders, one per question shape ---- */
+const BUILD={
+  /* a/b of T */
+  frac(d){
+    const {a,b,T}=d, per=T/b, ans=per*a, S=[];
+    S.push({q:`The bottom number is <b>${b}</b>. What does a bottom number always tell you to do?`,
+      o:[`Share into ${b} equal groups`,`Multiply by ${b}`,`Add ${b}`,`Take ${b} away`],c:0,
+      h:"Think about what a fifth or a quarter means — cutting something into that many equal pieces."});
+    S.push({q:`So share ${T} into ${b} groups. What is <b>${T} ÷ ${b}</b>?`,
+      o:nOpts(per,[per+1,T-b,per*2,b]).map(String),c:0,
+      h:`How many times does ${b} go into ${T}?`});
+    if(a===1){
+      S.push({q:`The top number is <b>1</b>, so you take just one group. What is the answer?`,
+        o:nOpts(ans,[T,per*2,b]).map(String),c:0,h:`One group is what you just worked out.`});
+    }else{
+      S.push({q:`One group is <b>${per}</b>. The top number is <b>${a}</b>. What do you do now?`,
+        o:[`Multiply ${per} by ${a}`,`Divide ${per} by ${a}`,`Add ${a} to ${per}`,`Nothing — you are done`],c:0,
+        h:"The top number tells you how many of those groups to take."});
+      S.push({q:`What is <b>${per} × ${a}</b>?`,
+        o:nOpts(ans,[per,ans+per,T-ans,per*(a+1)]).map(String),c:0,
+        h:`Count up in ${per}s, ${a} times.`});
+    }
+    return S;
+  },
+
+  /* p% of T */
+  pct(d){
+    const {p,T,u}=d, ans=T*p/100, S=[];
+    const FR={25:[1,4],50:[1,2],75:[3,4],20:[1,5],10:[1,10]};
+    if(FR[p]&&p%10!==0){
+      const [nu,de]=FR[p], one=T/de;
+      S.push({q:`<b>${p}%</b> is the same as which fraction?`,
+        o:[`${nu}/${de}`,`${de}/${nu}`,`${p}/10`,`1/${p}`],c:0,
+        h:"Half is 50%. A quarter is 25%. Three quarters is 75%."});
+      S.push({q:`So divide by <b>${de}</b>. What is <b>${fmtN(T,u)} ÷ ${de}</b>?`,
+        o:nOpts(one,[one*2,T-one,one/2]).map(v=>fmtN(v,u)),c:0,
+        h:`Split ${fmtN(T,u)} into ${de} equal parts.`});
+      if(nu>1) S.push({q:`Now multiply by <b>${nu}</b>. What is <b>${fmtN(one,u)} × ${nu}</b>?`,
+        o:nOpts(ans,[one,T-ans,ans+one]).map(v=>fmtN(v,u)),c:0,
+        h:`You need ${nu} of those parts.`});
+    }else{
+      const row=T/10;
+      S.push({q:`Always find <b>10%</b> first. What is <b>${fmtN(T,u)} ÷ 10</b>?`,
+        o:nOpts(row,[row*2,T-row,row/2,T]).map(v=>fmtN(v,u)),c:0,
+        h:"To divide by 10, every digit moves one place to the right."});
+      S.push({q:`10% is <b>${fmtN(row,u)}</b>. How many lots of 10% make <b>${p}%</b>?`,
+        o:nOpts(p/10,[p,10,p/5]).map(String),c:0,
+        h:`How many tens are there in ${p}?`});
+      S.push({q:`So what is <b>${fmtN(row,u)} × ${p/10}</b>?`,
+        o:nOpts(ans,[row,T-ans,ans+row,T]).map(v=>fmtN(v,u)),c:0,
+        h:`Count up in ${fmtN(row,u)}, ${p/10} times.`});
+    }
+    return S;
+  },
+
+  /* area of a shape */
+  area(d){
+    const {k,b,h}=d, box=b*h, ans=k==="tri"?box/2:box;
+    const S=[{q:`First, what is <b>base × height</b>? ${b} × ${h}`,
+      o:nOpts(box,[b+h,box/2,2*(b+h)]).map(String),c:0,h:`${b} lots of ${h}.`}];
+    if(k==="tri"){
+      S.push({q:`A triangle is exactly <b>half</b> of the rectangle round it. So what do you do to ${box}?`,
+        o:["Halve it","Double it","Leave it as it is","Add the base and height"],c:0,
+        h:"Picture the rectangle drawn around the triangle — the triangle fills half of it."});
+      S.push({q:`What is <b>${box} ÷ 2</b>?`,o:nOpts(ans,[box,box/4,ans+2]).map(v=>v+" cm²"),c:0,
+        h:`Half of ${box}.`});
+    }else{
+      S.push({q:`Do you halve it for a parallelogram?`,
+        o:["No — halving is only for triangles","Yes, always","Only if it looks slanted","Yes, then double it"],c:0,
+        h:"Cut the end off a parallelogram and slide it round: it becomes a rectangle, not half of one."});
+      S.push({q:`So what is the area?`,o:nOpts(ans,[box/2,b+h,2*(b+h)]).map(v=>v+" cm²"),c:0,
+        h:"It is the number you worked out in the first step."});
+    }
+    return S;
+  },
+
+  /* unit conversion */
+  unit(d){
+    const {v,from,to,f,dir}=d, ans=dir==="÷"?v/f:v*f;
+    return [
+     {q:`How many <b>${from}</b> are there in one <b>${to}</b>?`,
+      o:nOpts(f,[f*10,f/10,60]).map(String),c:0,h:"Write the fact down before you do anything else."},
+     {q:`You are going from ${from} to ${to}. Is ${to} a <b>bigger</b> or <b>smaller</b> unit?`,
+      o:[dir==="÷"?"Bigger, so divide":"Smaller, so multiply",
+         dir==="÷"?"Smaller, so multiply":"Bigger, so divide",
+         "Same size, so nothing changes","You always multiply"],c:0,
+      h:"Going to a bigger unit gives you a smaller number, and that means dividing."},
+     {q:`So what is <b>${v} ${dir} ${f}</b>?`,
+      o:nOpts(ans,[v,ans*10,ans/10,v*f]).map(String),c:0,
+      h:`Move every digit ${String(f).length-1} place${f===10?"":"s"}.`}
+    ];
+  },
+
+  /* partition an addition or subtraction of decimals */
+  dec(d){
+    const {x,y,op,u}=d;
+    const xi=Math.floor(x), yi=Math.floor(y);
+    const xd=Math.round((x-xi)*1000)/1000, yd=Math.round((y-yi)*1000)/1000;
+    const wi=op==="+"?xi+yi:xi-yi, wd=Math.round((op==="+"?xd+yd:xd-yd)*1000)/1000;
+    const ans=Math.round((op==="+"?x+y:x-y)*1000)/1000;
+    return [
+     {q:`Split it up. First the <b>whole numbers</b>: ${xi} ${op} ${yi}`,
+      o:nOpts(wi,[wi+1,wi-1,xi]).map(String),c:0,h:"Ignore everything after the point for now."},
+     {q:`Now the <b>bits after the point</b>: ${xd} ${op} ${yd}`,
+      o:nOpts(wd,[wd+0.1,Math.abs(xd-yd),xd]).map(String),c:0,
+      h:"Line the points up. Same number of digits on both — add zeros if you need to."},
+     {q:`Put them back together: ${wi} + ${wd}`,
+      o:nOpts(ans,[ans+0.05,wi,ans-0.1]).map(v=>fmtN(v,u)),c:0,
+      h:"Just add the two answers you have already got."}
+    ];
+  },
+
+  /* scale a recipe or rate up or down */
+  scale(d){
+    const {per,pu,base,bu,want,ans}=d, f=want/base;
+    const up=f>=1;
+    return [
+     {q:`How does <b>${want} ${bu}</b> compare with <b>${base} ${bu}</b>?`,
+      o:up?[...new Set([`${f} times bigger`,`${Math.round(want/base)} times bigger`,
+                        `${want-base} times bigger`,`${f*10} times bigger`,`The same`])].slice(0,4)
+          :[...new Set([`It is ${f===0.5?"half of it":f+" of it"}`,`It is double`,
+                        `It is ${base-want} times smaller`,`The same`])].slice(0,4),c:0,
+      h:`Divide ${want} by ${base}.`},
+     {q:`So what do you do to the <b>${per} ${pu}</b>?`,
+      o:up?[`Multiply it by ${f}`,`Divide it by ${f}`,`Add ${f}`,`Leave it alone`]
+          :[`${f===0.5?"Halve it":"Multiply it by "+f}`,`Double it`,`Add ${want}`,`Leave it alone`],c:0,
+      h:"Whatever happened to one side happens to the other."},
+     {q:`What is <b>${per} ${up?"×":"×"} ${f}</b>?`,
+      o:nOpts(ans,[per,want,ans*2,per+want]).map(v=>v+(pu?" "+pu:"")),c:0,
+      h:`${f===0.5?"Just halve "+per+".":"Split it up if it helps: "+per+" × "+Math.floor(f)+", then the rest."}`}
+    ];
+  },
+
+  /* equal parts of a total */
+  parts(d){
+    const {total,n,take}=d, one=total/n, S=[];
+    S.push({q:`To find <b>one part</b>, what do you do to ${total}?`,
+      o:[`Divide it by ${n}`,`Multiply it by ${n}`,`Take ${n} away`,`Add ${n}`],c:0,
+      h:`There are ${n} equal parts, so share ${total} between them.`});
+    S.push({q:`What is <b>${total} ÷ ${n}</b>?`,o:nOpts(one,[one*2,total-n,n]).map(String),c:0,
+      h:`How many times does ${n} fit into ${total}?`});
+    if(take>1) S.push({q:`One part is <b>${one}</b>. So what are <b>${take} parts</b> worth?`,
+      o:nOpts(one*take,[one,total,one*(take+1)]).map(String),c:0,h:`${take} lots of ${one}.`});
+    return S;
+  },
+
+  /* subtraction by counting on */
+  countOn(d){
+    const {from,to,u}=d;
+    const mid=Math.ceil(from), h1=Math.round((mid-from)*100)/100, h2=Math.round((to-mid)*100)/100;
+    const ans=Math.round((to-from)*100)/100;
+    return [
+     {q:`Instead of taking away, <b>count up</b>. From ${fmtN(from,u)} to ${fmtN(mid,u)} — how far is that?`,
+      o:nOpts(h1,[h1*2,1-h1,h1/2]).map(v=>fmtN(v,u)),c:0,h:`What do you add to ${fmtN(from,u)} to make it a round number?`},
+     {q:`Now from <b>${fmtN(mid,u)}</b> up to <b>${fmtN(to,u)}</b>?`,
+      o:nOpts(h2,[h2*2,h2/2,to]).map(v=>fmtN(v,u)),c:0,h:"This hop is the easy one — the whole part plus what is after the point."},
+     {q:`Add your two hops together: ${fmtN(h1,u)} + ${fmtN(h2,u)}`,
+      o:nOpts(ans,[ans+0.1,h2,ans-0.1]).map(v=>fmtN(v,u)),c:0,h:"That total is the gap between the two numbers."}
+    ];
+  },
+
+  /* division leaving a remainder */
+  divRem(d){
+    const {a,b,big,small}=d, q=Math.floor(a/b), r=a%b;
+    return [
+     {q:`How many <b>${small}</b> are there in one <b>${big}</b>?`,o:nOpts(b,[b*2,b/2,10]).map(String),c:0,
+      h:"Write the fact down first."},
+     {q:`What is <b>${a} ÷ ${b}</b>? Give the whole number and what is left over.`,
+      o:[`${q} remainder ${r}`,`${q+1} remainder ${r}`,`${q} remainder ${b-r}`,`${q-1} remainder ${r}`],c:0,
+      h:`How many whole ${b}s fit into ${a}, and what is left?`},
+     {q:`So write that properly.`,
+      o:[`${q} ${big} ${r} ${small}`,`${q} ${small} ${r} ${big}`,`${q+r} ${big}`,`${a} ${big}`],c:0,
+      h:`The whole number is the ${big}. The leftover is the ${small}.`}
+    ];
+  },
+
+  /* buying — always round up */
+  roundUp(d){
+    const {a,b,noun,ans}=d, exact=a/b;
+    const whole=Math.floor(exact), rem=a-whole*b;
+    const tidy=Math.round(exact*100)/100===exact;
+    const first = tidy
+      ? {q:`First the division. What is <b>${a} ÷ ${b}</b>?`,
+         o:nOpts(exact,[whole,exact*10,exact/10]).map(String),c:0,
+         h:`How many whole ${b}s fit into ${a}, and is there a bit left over?`}
+      : {q:`First the division. What is <b>${a} ÷ ${b}</b>? Give it with a remainder.`,
+         o:[`${whole} remainder ${rem}`,`${whole+1} remainder ${rem}`,`${whole} remainder ${b-rem}`,`${whole} exactly`],c:0,
+         h:`How many whole ${b}s fit into ${a}, and what is left over?`};
+    return [
+     first,
+     {q:`Can you buy <b>part of a ${noun}</b>?`,
+      o:[`No — you have to buy whole ${noun}s`,`Yes, shops sell halves`,`Only if you ask`,`It does not matter`],c:0,
+      h:"Picture it in a shop. There is no half box on the shelf."},
+     {q:`${whole} ${noun}s would only give you ${whole*b}, and you need ${a}. So how many must you buy?`,
+      o:nOpts(ans,[whole,ans+2,whole*2]).map(String),c:0,
+      h:"Go up to the next whole one."}
+    ];
+  },
+
+  /* hand-written steps for one-off questions */
+  raw(d){ return d.steps; },
+
+  /* answered the wrong thing */
+  asked(d){
+    const {want,wrong,calc,calcWrong,ans,u}=d;
+    return [
+     {q:`Read it again. Does the question ask for <b>${wrong}</b>, or <b>${want}</b>?`,
+      o:[want,wrong,"Both of them","It does not say"],c:0,
+      h:"Find the exact words in the question and underline them."},
+     {q:`So which calculation gives you <b>${want}</b>?`,
+      o:[calc,calcWrong,`${calc} × 2`,"None of these"],c:0,
+      h:`You want ${want}, not ${wrong}. That changes which sum you do.`},
+     {q:`Work it out: <b>${calc}</b>`,
+      o:nOpts(ans,[ans*2,ans+1,ans/2]).map(v=>fmtN(v,u)),c:0,
+      h:"Take your time — this is the easy part now you know which sum it is."}
+    ];
+  }
+};
+
+/* ---- which questions have a scaffold (index matches question order) ---- */
+const SCAFFOLDS={
+"maths:1":[{k:"frac",a:1,b:4,T:20},{k:"frac",a:3,b:5,T:45},{k:"frac",a:2,b:3,T:24},
+           {k:"frac",a:3,b:4,T:28},{k:"frac",a:2,b:5,T:30},{k:"frac",a:3,b:10,T:30}],
+"maths:2":[{k:"pct",p:10,T:6.8,u:"£"},{k:"pct",p:20,T:6.8,u:"£"},{k:"pct",p:50,T:90,u:""},
+           {k:"pct",p:75,T:280,u:"£"},{k:"pct",p:80,T:300,u:"ml"},{k:"pct",p:25,T:60,u:""}],
+"maths:4":[{k:"frac",a:2,b:5,T:30},{k:"frac",a:3,b:10,T:30},
+           {k:"asked",want:"how many are left",wrong:"how many they bought",calc:"30 − 12 − 9",calcWrong:"12 + 9",ans:9,u:""},
+           {k:"frac",a:1,b:3,T:24},{k:"frac",a:1,b:5,T:60},{k:"pct",p:25,T:60,u:"£"}],
+"maths:5":[{k:"parts",total:24,n:4,take:1},{k:"parts",total:24,n:4,take:5},
+           {k:"scale",per:60,pu:"g",base:100,bu:"ml",want:350,ans:210},
+           {k:"scale",per:6,pu:"tubes",base:8,bu:"models",want:20,ans:15},
+           {k:"scale",per:5,pu:"miles",base:8,bu:"km",want:4,ans:2.5},
+           {k:"scale",per:5,pu:"miles",base:8,bu:"km",want:16,ans:10}],
+"maths:7":[{k:"dec",x:13.70,y:8.92,op:"+",u:""},{k:"dec",x:7.561,y:2.370,op:"-",u:""},
+           {k:"countOn",from:9.60,to:10.35,u:"£"},
+           {k:"dec",x:3.4,y:0.65,op:"+",u:""},{k:"countOn",from:1.35,to:6.2,u:""},{k:"dec",x:0.7,y:0.35,op:"+",u:""}],
+"maths:11":[{k:"unit",v:15,from:"cm",to:"m",f:100,dir:"÷"},{k:"unit",v:4000,from:"m",to:"km",f:1000,dir:"÷"},
+            {k:"raw",steps:[
+              {q:"Which goes all the way across a circle — the radius or the diameter?",o:["The diameter","The radius","Both the same","Neither"],c:0,h:"The radius only reaches from the middle to the edge."},
+              {q:"So the diameter is how many radiuses?",o:["Two","One","Half of one","Four"],c:0,h:"Middle to one edge, then middle to the other edge."},
+              {q:"What is <b>17 × 2</b>?",o:["34 mm","17 mm","8.5 mm","27 mm"],c:0,h:"Double 17."}]},
+            {k:"unit",v:2.5,from:"g",to:"kg",f:1000,dir:"×"},{k:"unit",v:1750,from:"ml",to:"litres",f:1000,dir:"÷"},
+            {k:"divRem",a:193,b:16,big:"lb",small:"oz"}],
+"maths:13":[{k:"area",k2:"rect",b:7,h:4},{k:"area",k2:"tri",b:8,h:10},{k:"area",k2:"para",b:5,h:2},
+            {k:"area",k2:"tri",b:6,h:4},null,{k:"area",k2:"rect",b:3,h:3}],
+"maths:18":[{k:"asked",want:"the change",wrong:"the cost",calc:"£20 − £18.75",calcWrong:"£18.75 + £20",ans:1.25,u:"£"},
+            {k:"asked",want:"the mean",wrong:"the total",calc:"60 ÷ 4",calcWrong:"60 × 4",ans:15,u:""},
+            {k:"roundUp",a:4500,b:200,noun:"box",ans:23},
+            {k:"roundUp",a:77,b:3,noun:"pack",ans:26},
+            {k:"raw",steps:[
+              {q:"First add the two distances. What is <b>1560 + 2440</b>?",o:["4000 m","3900 m","4400 m","3000 m"],c:0,h:"560 + 440 makes 1000."},
+              {q:"The question asks for <b>km</b>. How many metres in one kilometre?",o:["1000","100","10","10000"],c:0,h:"Kilo means a thousand."},
+              {q:"So what is <b>4000 ÷ 1000</b>?",o:["4 km","40 km","400 km","0.4 km"],c:0,h:"Three zeros come off."}]},
+            {k:"asked",want:"how many are left",wrong:"how many were sold",calc:"30 − 21",calcWrong:"30 + 21",ans:9,u:""}],
+"maths:20":[{k:"pct",p:75,T:280,u:"£"},{k:"pct",p:80,T:300,u:"ml"},{k:"dec",x:13.70,y:8.92,op:"+",u:""},
+            {k:"unit",v:15,from:"cm",to:"m",f:100,dir:"÷"},{k:"area",k2:"tri",b:8,h:10},
+            {k:"raw",steps:[
+              {q:"<b>n² </b>means n times itself. When n = 6, what is <b>6 × 6</b>?",o:["36","12","66","30"],c:0,h:"Six sixes."},
+              {q:"<b>3n</b> means 3 times n. What is <b>3 × 6</b>?",o:["18","36","9","63"],c:0,h:"Three sixes."},
+              {q:"Now add them: <b>36 + 18</b>",o:["54","44","64","24"],c:0,h:"36 plus 18."}]},
+            {k:"asked",want:"the change",wrong:"the cost",calc:"£20 − £18.75",calcWrong:"£18.75 + £20",ans:1.25,u:"£"},
+            {k:"roundUp",a:4500,b:200,noun:"box",ans:23}]
+};
+
+function scaffoldFor(sub,dayN,qIdx){
+  const list=SCAFFOLDS[sub+":"+dayN];
+  if(!list) return null;
+  const d=list[qIdx];
+  if(!d) return null;
+  const spec = d.k==="area" ? Object.assign({},d,{k:d.k2}) : d;
+  try{ const steps=BUILD[d.k](spec); return (steps&&steps.length)?steps:null; }
+  catch(e){ return null; }
+}
+
+/* ---- running the scaffold inside a question ---- */
+let hSteps=null, hAt=0, hUsed=false, hEarly=false;
+
+function drawHelpButton(urge){
+  const box=el("helpSlot");
+  if(!box||hSteps) return;
+  box.innerHTML=`<button class="helpbtn ${urge?"urge":""}" id="hGo">
+    ${urge?"Stuck? Let me break it down for you":"Help me — break it down"}</button>`;
+  el("hGo").onclick=startHelp;
+}
+function offerHelp(){ if(!hSteps) drawHelpButton(true); }
+
+function methodReminder(){
+  const M=(typeof METHODS!=="undefined")?METHODS[S.sub+":"+S.d.n]:null;
+  const m=M?M[0]:null;
+  const rule=m?m.rule:S.d.rule, egs=m?m.eg:S.d.eg;
+  el("helpSlot").innerHTML=`<div class="helpbox">
+    <div class="hhead">Today's general method<span>${S.d.t}</span></div>
+    <p class="hq" style="font-size:.96rem;font-weight:400">${rule}</p>
+    ${egs.map(e=>`<div class="eg" style="background:#fff">${e}</div>`).join("")}
+    <p style="font-size:.84rem;color:#6B5200;margin-top:10px">The example uses different numbers from your question. Work out how the method fits this one.</p>
+    <button class="hopt" id="hClose" style="margin-top:12px;text-align:center;font-weight:600">Got it — let me try again</button>
+  </div>`;
+  el("hClose").onclick=()=>drawHelpButton(tries>=2);
+}
+
+function startHelp(){
+  hSteps=scaffoldFor(S.sub,S.d.n,qi);
+  if(!hSteps){ hUsed=true; hEarly=hEarly||tries===0; methodReminder(); return; }
+  hAt=0; hUsed=true; hEarly=hEarly||tries===0;
+  el("opts").style.opacity=".45"; el("opts").style.pointerEvents="none";
+  el("primary").disabled=true;
+  drawHelpStep();
+}
+function drawHelpStep(){
+  const st=hSteps[hAt];
+  const shuffled=st.o.map((t,i)=>({t,i})).sort(()=>Math.random()-.5);
+  el("helpSlot").innerHTML=`<div class="helpbox">
+    <div class="hhead">Step ${hAt+1} of ${hSteps.length}<span>I will not tell you the answer</span></div>
+    <p class="hq">${st.q}</p>
+    <div class="hopts">${shuffled.map(o=>`<button class="hopt" data-i="${o.i}">${o.t}</button>`).join("")}</div>
+    <div id="hMsg"></div>
+  </div>`;
+  document.querySelectorAll(".hopt").forEach(b=>b.onclick=()=>{
+    if(+b.dataset.i===st.c){
+      b.classList.add("right");
+      document.querySelectorAll(".hopt").forEach(x=>x.disabled=true);
+      setTimeout(()=>{
+        hAt++;
+        if(hAt<hSteps.length) drawHelpStep(); else finishHelp();
+      },750);
+    }else{
+      b.classList.add("wrong"); b.disabled=true;
+      el("hMsg").innerHTML=`<div class="hhint">${st.h}</div>`;
+    }
+  });
+}
+function finishHelp(){
+  el("helpSlot").innerHTML=`<div class="helpbox done">
+    <div class="hhead">You worked it out<span></span></div>
+    <p class="hq">You have got the answer now. Go back up and <b>tick it</b> on the question.</p>
+  </div>`;
+  hSteps=null; hAt=0;
+  el("opts").style.opacity="1"; el("opts").style.pointerEvents="auto";
+  el("msg").innerHTML="";
+  setTimeout(()=>{ if(!answered) drawHelpButton(false); },2600);
+}
+
 /* =======================================================================
    APP
    ======================================================================= */
@@ -593,7 +1695,7 @@ let S=null, qi=0, sel=[], answered=false, tries=0, picks=[], got=0;
 let t0=null, tick=null, qt0=null, unlocked=false;
 
 const el=id=>document.getElementById(id);
-const show=id=>{["home","brief","quiz","done","parent"].forEach(k=>el(k).hidden=(k!==id));window.scrollTo(0,0)};
+const show=id=>{["home","brief","quiz","done","parent","explain"].forEach(k=>el(k).hidden=(k!==id));window.scrollTo(0,0)};
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const mmss=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
 const today=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short"});
@@ -650,11 +1752,13 @@ function home(){
     <p class="sub" style="margin:0">${doneN?`${doneN} ${s.name.toLowerCase()} mornings finished. Everything is saved.`:`Start with Day 1.`}</p>
   </div>`;
 
-  let wk="";
+  let wk="", wkN=0;
+  const WKC=["var(--w1)","var(--w2)","var(--w3)","var(--w4)"];
   s.days.forEach((d,n)=>{
-    if(d.wk!==wk){ if(wk) out+="</div>"; wk=d.wk; out+=`<div class="week">${wk}</div><div class="days">`; }
-    const b=best[n];
-    out+=`<button class="day ${b!=null?"done":""}" data-i="${n}">
+    if(d.wk!==wk){ if(wk){out+="</div>";wkN++;} wk=d.wk;
+      out+=`<div class="week" style="color:${WKC[wkN%4]}">${wk}</div><div class="days">`; }
+    const b=best[n], c=WKC[wkN%4];
+    out+=`<button class="day ${b!=null?"done":""}" data-i="${n}" style="border-left-color:${b!=null?"var(--win)":c}">
       ${b!=null?`<span class="star">${b}/${d.qs.length}</span>`:""}
       <span class="n">Day ${d.n}</span><span class="t">${d.t}</span></button>`;
   });
@@ -669,19 +1773,46 @@ function home(){
 }
 
 /* ------------------------------ BRIEF -------------------------------- */
+let mSel=0;
+function methodsFor(d){ return METHODS[SUB+":"+d.n] || null; }
+function methodTabs(d){
+  const M=methodsFor(d);
+  if(!M||M.length<2) return "";
+  return `<div class="mtabs">${M.map((m,i)=>
+    `<button class="mtab ${i===0?"on":""}" data-m="${i}"><b>METHOD ${i+1}</b>${m.n}</button>`).join("")}</div>`;
+}
+function drawMethod(d){
+  const M=methodsFor(d), card=el("mCard");
+  if(!card) return;
+  if(!M){ card.innerHTML=`<h3>The method</h3><p style="font-size:.95rem;margin-top:6px">${d.rule}</p>
+    ${d.eg.map(e=>`<div class="eg">${e}</div>`).join("")}`; return; }
+  const m=M[mSel]||M[0];
+  card.innerHTML=`<h3>${M.length>1?"Method "+(mSel+1)+" — "+m.n:"The method"}</h3>
+    <p style="font-size:.95rem;margin-top:6px">${m.rule}</p>
+    ${m.eg.map(e=>`<div class="eg">${e}</div>`).join("")}
+    <p class="${M.length>1?"mwhen":"monly"}">${M.length>1?"<b>When to use it:</b> "+m.when:m.when}</p>`;
+}
 function brief(n){
   const s=SUBJECTS[SUB]; const d=s.days[n];
   S={sub:SUB,i:n,d:d};
   el("brief").innerHTML=`<div class="card">
     <h1>Day ${d.n}</h1><h2>${d.t}</h2>
-    <div class="rule"><h3>The method</h3><p style="font-size:.95rem;margin-top:6px">${d.rule}</p>
-      ${d.eg.map(e=>`<div class="eg">${e}</div>`).join("")}</div>
+    ${methodTabs(d)}
+    <div class="rule" id="mCard"></div>
+    ${EXPLAINERS[SUB+":"+d.n]?`<button class="explainbtn" id="xOpen">Still not sure? Show me how it works</button>`:""}
     <p class="sub">Read the method and both examples together first — that is the part that teaches. Then six questions, about a minute each.</p>
     <div class="actions"><button class="btn" id="start">Start the questions</button>
       <button class="btn ghost" id="back">Back</button></div>
   </div>`;
+  mSel=0; drawMethod(d);
+  document.querySelectorAll(".mtab").forEach(b=>b.onclick=()=>{
+    mSel=+b.dataset.m;
+    document.querySelectorAll(".mtab").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); drawMethod(d);
+  });
   el("start").onclick=begin;
   el("back").onclick=home;
+  if(el("xOpen")) el("xOpen").onclick=()=>openExplainer(EXPLAINERS[SUB+":"+d.n],d.n,n);
   show("brief");
 }
 
@@ -698,7 +1829,7 @@ function clock(){
   else { c.textContent="Time's up"; c.className="timer up"; }
 }
 function render(){
-  const q=S.d.qs[qi]; sel=[];answered=false;tries=0;picks=[];qt0=Date.now();
+  const q=S.d.qs[qi]; sel=[];answered=false;tries=0;picks=[];qt0=Date.now();hSteps=null;hAt=0;hUsed=false;hEarly=false;
   const numeric=SUBJECTS[S.sub].numeric;
   el("quiz").innerHTML=`<div class="card">
     <div class="bar-row">
@@ -714,10 +1845,12 @@ function render(){
     <div id="msg"></div>
     <div class="actions"><button class="btn" id="primary" disabled>Check answer</button>
       <button class="btn ghost sm" id="stop">Stop</button></div>
+    <div id="helpSlot"></div>
   </div>`;
   [...el("opts").children].forEach(b=>b.onclick=()=>pick(+b.dataset.n));
   el("primary").onclick=submit;
   el("stop").onclick=()=>{clearInterval(tick);home()};
+  drawHelpButton(false);
   clock();
 }
 function pick(n){
@@ -741,17 +1874,19 @@ function submit(){
 
   if(want===have){
     answered=true;
-    if(tries===0) got++;
+    if(tries===0 && !hUsed) got++;
     else logError(q,picks,tries);
     [...el("opts").children].forEach(b=>{b.disabled=true;if(sel.includes(+b.dataset.n))b.classList.add("right")});
     el("msg").innerHTML=`<div class="msg yes"><b>${tries===0?"Correct — first go":"Correct now"}</b>
       <div class="work">${q.w}</div></div>`;
+    el("helpSlot").innerHTML="";
     el("primary").textContent = qi===S.d.qs.length-1?"Finish":"Next question";
     el("primary").disabled=false;
   } else {
     tries++; picks.push(chosen);
     [...el("opts").children].forEach(b=>{if(sel.includes(+b.dataset.n)){b.classList.add("wrong");b.querySelector(".box").textContent="✕"}});
     el("msg").innerHTML=`<div class="msg no"><b>Not that one — have another go</b>${q.h}</div>`;
+    if(tries>=2 && scaffoldFor(S.sub,S.d.n,qi)) setTimeout(offerHelp,900);
     setTimeout(()=>{
       sel=[];
       [...el("opts").children].forEach(b=>{b.classList.remove("wrong","sel");b.querySelector(".box").textContent=""});
@@ -763,7 +1898,7 @@ function logError(q,picks,tries){
   DB.errors.push({
     sub:S.sub, day:S.d.n, dayTitle:S.d.t, topic:S.d.wk,
     q:q.a, stem:q.s||"", correct:q.multi?q.c.map(i=>q.o[i]).join(" + "):q.o[q.c],
-    picks:picks.slice(), tries:tries,
+    picks:picks.slice(), tries:tries, helped:hUsed, helpFirst:hEarly,
     secs:Math.round((Date.now()-qt0)/1000), date:today()
   });
 }
@@ -867,7 +2002,7 @@ function parentArea(){
           ${e.stem?`<div class="d">${esc(e.stem).replace(/\n/g," ")}</div>`:""}
           <div class="picks">${e.picks.map(p=>`<span class="tag">${esc(p)}</span>`).join("")}
             <span class="tag ok">${esc(e.correct)}</span></div>
-          <div class="d">${SUBJECTS[e.sub].name} Day ${e.day} · ${e.tries} wrong ${e.tries===1?"try":"tries"} · ${e.secs}s · ${e.date}</div>
+          <div class="d">${SUBJECTS[e.sub].name} Day ${e.day} · ${e.tries} wrong ${e.tries===1?"try":"tries"} · ${e.secs}s · ${e.date}${e.helped?(e.helpFirst?" · asked for help before trying":" · needed the step-by-step"):""}</div>
         </div>`).join("")
         :`<p class="sub">Nothing logged yet.</p>`}
     </div>
@@ -958,10 +2093,17 @@ function report(){
     L.push(`  [${SUBJECTS[e.sub].name} Day ${e.day}] ${e.q.replace(/<[^>]+>/g,"")}`);
     if(e.stem) L.push(`      ${e.stem.replace(/<[^>]+>/g,"").replace(/\n/g," ")}`);
     L.push(`      He chose: ${e.picks.map(p=>p.replace(/<[^>]+>/g,"")).join(", ")}`);
-    L.push(`      Correct: ${e.correct.replace(/<[^>]+>/g,"")}   (${e.tries} wrong ${e.tries===1?"try":"tries"}, ${e.secs}s)`);
+    L.push(`      Correct: ${e.correct.replace(/<[^>]+>/g,"")}   (${e.tries} wrong ${e.tries===1?"try":"tries"}, ${e.secs}s${e.helped?(e.helpFirst?", asked for help before attempting it":", needed the step-by-step breakdown"):""})`);
   });
   return L.join("\n");
 }
 
+let _rz;
+window.addEventListener("resize",()=>{
+  clearTimeout(_rz);
+  _rz=setTimeout(()=>{
+    if(X && !el("explain").hidden && el("xStage")){ X.def.build(el("xStage"),X.p); exPaint(); }
+  },250);
+});
 load().then(()=>{paint();home()});
 </script>
