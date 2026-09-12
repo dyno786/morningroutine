@@ -265,6 +265,20 @@
   .k2 b{display:block;font-family:Fredoka,sans-serif;font-size:1.45rem;line-height:1.15}
   .k2 span{font-size:.68rem;color:var(--soft);line-height:1.25;display:block;margin-top:2px}
   .chartcard{margin-top:12px}
+  .prize{background:linear-gradient(135deg,#FFF1C9,#FFE1A8);border-radius:14px;padding:14px 16px;margin-top:14px;text-align:center}
+  .plab{font-size:.68rem;font-weight:700;letter-spacing:.08em;color:#946400}
+  .pbig{font-family:Fredoka,sans-serif;font-size:1.9rem;font-weight:600;color:#7A5200;line-height:1.15;margin-top:2px}
+  .psub{font-size:.82rem;color:#7A5200;margin-top:4px}
+  .prizecard{background:linear-gradient(135deg,#FFF6DC,#fff);border:2px solid var(--sun)}
+  .prow{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:8px;margin-top:8px}
+  .prow div{text-align:center}
+  .prow b{display:block;font-family:Fredoka,sans-serif;font-size:1.4rem;color:#7A5200}
+  .prow span{font-size:.68rem;color:var(--soft)}
+  .flab{font-size:.72rem;font-weight:600;color:var(--soft);margin-bottom:4px}
+  input[type=number]{font:inherit;font-family:'JetBrains Mono',monospace;font-size:1.05rem;text-align:center;
+    padding:11px;border:2px solid var(--line);border-radius:12px;width:100%}
+  .resume{border:2px solid var(--sun);background:linear-gradient(180deg,#FFFBEF,#fff);margin-bottom:12px}
+  .rlab{font-size:.68rem;font-weight:700;letter-spacing:.08em;color:#9A6B00}
   .hgroup{margin-top:14px}
   .hdate{font-size:.72rem;font-weight:700;letter-spacing:.05em;color:var(--soft);
     text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line)}
@@ -1914,12 +1928,12 @@ const SUBJECTS={
   maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
   english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
 };
-const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle"};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle",resume:null,reward:{money:2.5,mins:15,daily:true,payouts:[]}};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
 let SUB="maths", VIEW="days";
 
 /* run state */
-let S=null, qi=0, sel=[], answered=false, tries=0, picks=[], got=0;
+let S=null, qi=0, sel=[], answered=false, tries=0, picks=[], got=0, tBase=0;
 let t0=null, tick=null, qt0=null, unlocked=false;
 
 const el=id=>document.getElementById(id);
@@ -2042,6 +2056,33 @@ function stack(parts,total){
   return out+"</svg>";
 }
 
+function rw(){ return Object.assign({money:2.5,mins:15,daily:true,payouts:[]},DB.reward||{}); }
+
+/* Which finished sessions earn a reward. "daily" caps it at one a day so he
+   cannot farm the same easy day over and over. */
+function earners(){
+  const done=DB.sessions.filter(x=>!x.partial&&x.stamp).sort((a,b)=>a.stamp-b.stamp);
+  if(!rw().daily) return done;
+  const seen={}, out=[];
+  done.forEach(x=>{ const k=dayKey(x.stamp); if(!seen[k]){seen[k]=1;out.push(x);} });
+  return out;
+}
+function earned(){
+  const n=earners().length, r=rw();
+  return {n:n, money:Math.round(n*r.money*100)/100, mins:n*r.mins};
+}
+function paidOut(){
+  const p=(rw().payouts||[]);
+  return {money:Math.round(p.reduce((a,x)=>a+(x.money||0),0)*100)/100,
+          mins:p.reduce((a,x)=>a+(x.mins||0),0)};
+}
+function owing(){
+  const e=earned(), p=paidOut();
+  return {money:Math.round((e.money-p.money)*100)/100, mins:Math.max(0,e.mins-p.mins)};
+}
+const gbp=v=>"£"+(Math.round(v*100)/100).toFixed(2);
+function mins2(v){ return v>=60 ? Math.floor(v/60)+"h "+(v%60?v%60+"m":"") : v+"m"; }
+
 function dayKey(ms){ return new Date(ms).toISOString().slice(0,10); }
 
 function streak(){
@@ -2152,7 +2193,18 @@ function progressView(){
   const worst=secRows.slice(0,2).map(r=>r.l).join(" and ");
   const best=secRows.slice(-1).map(r=>r.l).join("");
 
-  return `<div class="card">
+  const E2=earned(), O=owing(), P=paidOut(), R=rw();
+  const prize=(R.money>0||R.mins>0)?`<div class="card prizecard">
+    <div class="plab">REWARDS</div>
+    <div class="prow">
+      <div><b>${gbp(E2.money)}</b><span>earned in total</span></div>
+      <div><b>${gbp(O.money)}</b><span>still owed</span></div>
+      ${R.mins>0?`<div><b>${mins2(O.mins)}</b><span>game time owed</span></div>`:""}
+    </div>
+    <p class="sub" style="margin-top:8px">${E2.n} day${E2.n===1?"":"s"} counted${R.daily?", one a day":""} · ${gbp(R.money)}${R.mins>0?" and "+mins2(R.mins):""} each${P.money>0?` · ${gbp(P.money)} already paid`:""}</p>
+  </div>`:"";
+
+  return prize+`<div class="card">
     <h2>Progress</h2>
     <p class="sub">Everything he has done so far. Tap a bar to see what it was.</p>
     <div class="kpis2">${kpi.map(k=>
@@ -2206,7 +2258,12 @@ function home(){
     </div>`;
 
   if(VIEW==="progress"){
-    el("home").innerHTML=`<div class="card"><h1>Morning practice</h1>${tabs}</div>`+progressView();
+    el("home").innerHTML=(DB.resume?`<div class="card resume"><div class="rlab">PAUSED</div>
+        <h2 style="color:var(--ink);font-family:Fredoka">${SUBJECTS[DB.resume.sub].name} Day ${DB.resume.dayN}</h2>
+        <p class="sub" style="margin-top:2px">question ${DB.resume.qi+1} of ${DB.resume.qs.length}</p>
+        <div class="actions"><button class="btn" id="rGo2">Carry on</button></div></div>`:"")
+      +`<div class="card"><h1>Morning practice</h1>${tabs}</div>`+progressView();
+    if(el("rGo2")) el("rGo2").onclick=resumeRun;
     document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
       if(b.dataset.sub==="progress"){VIEW="progress";} else {VIEW="days";SUB=b.dataset.sub;}
       home();
@@ -2214,7 +2271,18 @@ function home(){
     show("home"); return;
   }
 
-  let out=`<div class="card">
+  const R=DB.resume;
+  const resumeCard = R ? `<div class="card resume">
+      <div class="rlab">PAUSED</div>
+      <h2 style="color:var(--ink);font-family:Fredoka">${SUBJECTS[R.sub].name} Day ${R.dayN}</h2>
+      <p class="sub" style="margin-top:2px">${esc(R.dayTitle)} · question ${R.qi+1} of ${R.qs.length} · ${Math.floor(R.secs/60)}m ${R.secs%60}s so far</p>
+      <div class="actions">
+        <button class="btn" id="rGo">Carry on</button>
+        <button class="btn ghost sm" id="rEnd">Finish here</button>
+      </div>
+    </div>` : "";
+
+  let out=resumeCard+`<div class="card">
     <h1>Morning practice</h1>
     <p class="sub">Ten minutes a day. Pick today's card, read the method together, then six questions. Nothing moves on until the answer is right.</p>
     ${tabs}
@@ -2234,6 +2302,8 @@ function home(){
   out+="</div>";
 
   el("home").innerHTML=out;
+  if(el("rGo")) el("rGo").onclick=resumeRun;
+  if(el("rEnd")) el("rEnd").onclick=abandonRun;
   document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
     if(b.dataset.sub==="progress"){VIEW="progress";} else {VIEW="days";SUB=b.dataset.sub;}
     home();
@@ -2289,16 +2359,47 @@ function brief(n){
 
 /* ------------------------------- QUIZ -------------------------------- */
 function begin(){
-  qi=0;got=0;t0=Date.now(); S.sid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  qi=0;got=0;tBase=0;t0=Date.now(); S.sid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   clearInterval(tick); tick=setInterval(clock,1000);
   render();show("quiz");
 }
+function elapsed(){ return tBase+Math.floor((Date.now()-t0)/1000); }
 function clock(){
   const c=el("cl"); if(!c) return;
-  const left=DB.mins*60-Math.floor((Date.now()-t0)/1000);
+  const left=DB.mins*60-elapsed();
   if(left>=0){ c.textContent=mmss(left); c.className="timer"+(left<=60?" low":""); }
   else { c.textContent="Time's up"; c.className="timer up"; }
 }
+async function saveResume(){
+  if(!S||!S.d||!S.d.qs) return;
+  DB.resume={sub:S.sub,i:S.i,dayN:S.d.n,dayTitle:S.d.t,qs:S.d.qs,
+             qi:qi,got:got,secs:elapsed(),sid:S.sid,at:Date.now()};
+  await save();
+}
+async function clearResume(){ DB.resume=null; await save(); }
+
+function resumeRun(){
+  const r=DB.resume; if(!r) return;
+  SUB=r.sub; VIEW="days";
+  const base=SUBJECTS[r.sub].days[r.i];
+  S={sub:r.sub,i:r.i,d:Object.assign({},base,{qs:r.qs}),base:base,sid:r.sid};
+  qi=r.qi; got=r.got; tBase=r.secs||0; t0=Date.now();
+  clearInterval(tick); tick=setInterval(clock,1000);
+  render(); show("quiz");
+}
+
+async function abandonRun(){
+  const r=DB.resume; if(!r) return;
+  if(r.qi>0){
+    DB.sessions.push({sid:r.sid,sub:r.sub,day:r.dayN,dayTitle:r.dayTitle,score:r.got,total:r.qi,
+                      secs:r.secs,date:today(),stamp:Date.now(),partial:true});
+    await enqueue(["Stopped early",today(),SUBJECTS[r.sub].name,r.dayN,strip(r.dayTitle),
+                   r.got,r.qi,r.secs,"","","","","",""]);
+  }
+  await clearResume();
+  home();
+}
+
 function render(){
   const q=S.d.qs[qi]; sel=[];answered=false;tries=0;picks=[];qt0=Date.now();hSteps=null;hAt=0;hUsed=false;hEarly=false;
   const numeric=SUBJECTS[S.sub].numeric;
@@ -2315,25 +2416,15 @@ function render(){
       `<button class="opt" data-n="${n}"><span class="box"></span><span class="v ${numeric?"num":""}">${o}</span></button>`).join("")}</div>
     <div id="msg"></div>
     <div class="actions"><button class="btn" id="primary" disabled>Check answer</button>
-      <button class="btn ghost sm" id="stop">Stop</button></div>
+      <button class="btn ghost sm" id="stop">Pause</button></div>
     <div id="helpSlot"></div>
   </div>`;
   [...el("opts").children].forEach(b=>b.onclick=()=>pick(+b.dataset.n));
   el("primary").onclick=submit;
-  el("stop").onclick=async()=>{
-    clearInterval(tick);
-    if(qi>0){
-      const secs=Math.round((Date.now()-t0)/1000);
-      DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:qi,
-                        secs:secs,date:today(),stamp:Date.now(),partial:true});
-      await save();
-      await enqueue(["Stopped early",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
-                     got,qi,secs,"","","","","",""]);
-    }
-    home();
-  };
+  el("stop").onclick=async()=>{ clearInterval(tick); await saveResume(); home(); };
   drawHelpButton(false);
   clock();
+  saveResume();
 }
 function pick(n){
   if(answered) return;
@@ -2389,7 +2480,8 @@ function logError(q,picks,tries){
 /* ------------------------------ RESULT ------------------------------- */
 async function finish(){
   clearInterval(tick);
-  const total=S.d.qs.length, secs=Math.round((Date.now()-t0)/1000);
+  const total=S.d.qs.length, secs=elapsed();
+  await clearResume();
   const b=DB.best[S.sub];
   if(b[S.i]==null||got>b[S.i]) b[S.i]=got;   // finished runs only
   DB.sessions.push({sid:S.sid,sub:S.sub,day:S.d.n,dayTitle:S.d.t,score:got,total:total,secs:secs,
@@ -2411,6 +2503,11 @@ async function finish(){
     <div style="margin:16px 0 4px"><span class="score">${got}/${total}</span><small>right first time</small></div>
     <div><span class="pill">${mmss(secs)} taken</span>${over?`<span class="pill">over the ${DB.mins} minutes</span>`:`<span class="pill">inside the ${DB.mins} minutes</span>`}</div>
     <div class="rule" style="margin-top:16px"><p style="font-size:.95rem">${verdict}</p></div>
+    ${(rw().money>0||rw().mins>0)?`<div class="prize">
+      <div class="plab">EARNED TODAY</div>
+      <div class="pbig">${rw().money>0?gbp(rw().money):""}${(rw().money>0&&rw().mins>0)?" + ":""}${rw().mins>0?mins2(rw().mins)+" game time":""}</div>
+      <div class="psub">Owed so far: <b>${gbp(owing().money)}</b>${owing().mins>0?` and <b>${mins2(owing().mins)}</b> of game time`:""}</div>
+    </div>`:""}
     <div class="actions">
       ${nxt?`<button class="btn" id="next">Tomorrow: Day ${nxt.n}</button>`:""}
       <button class="btn ghost" id="again">Redo Day ${S.d.n}</button>
@@ -2519,6 +2616,36 @@ function parentArea(){
     </div>
 
     <div class="hr"></div>
+    <h3>Rewards</h3>
+    <p class="sub">What he earns for finishing a day. Set either to zero to turn it off.</p>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <div style="flex:1">
+        <div class="flab">Pocket money per day</div>
+        <input type="number" id="rwMoney" step="0.25" min="0" value="${rw().money}">
+      </div>
+      <div style="flex:1">
+        <div class="flab">Game time per day (minutes)</div>
+        <input type="number" id="rwMins" step="5" min="0" value="${rw().mins}">
+      </div>
+    </div>
+    <div class="seg" id="rwDaily" style="margin-top:10px">
+      <button data-v="1" class="${rw().daily?"on":""}">Once a day</button>
+      <button data-v="0" class="${rw().daily?"":"on"}">Every session</button>
+    </div>
+    <div class="actions"><button class="btn sm" id="rwSave">Save rewards</button></div>
+    <div class="stat" style="margin-top:12px">
+      <div><b>${gbp(earned().money)}</b><span>earned</span></div>
+      <div><b>${gbp(owing().money)}</b><span>owed now</span></div>
+      <div><b>${mins2(owing().mins)}</b><span>game time owed</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost sm" id="rwPay">Mark it all as paid</button>
+    </div>
+    <div id="rwMsg"></div>
+    ${(rw().payouts||[]).length?`<p class="sub" style="margin-top:10px">Paid out: ${
+      rw().payouts.slice().reverse().slice(0,6).map(x=>`${x.date} ${gbp(x.money)}${x.mins?" + "+mins2(x.mins):""}`).join(" · ")}</p>`:""}
+
+    <div class="hr"></div>
     <h3>Question remix</h3>
     <p class="sub">Stops him learning the answers by position instead of by working them out.</p>
     <div class="seg" id="remix">
@@ -2583,6 +2710,28 @@ function parentArea(){
     try{ await navigator.clipboard.writeText(t.value); el("copy").textContent="Copied"; }
     catch(e){ document.execCommand("copy"); el("copy").textContent="Copied"; }
     setTimeout(()=>el("copy").textContent="Copy to clipboard",1800);
+  };
+  document.querySelectorAll("#rwDaily button").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll("#rwDaily button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+  });
+  el("rwSave").onclick=async()=>{
+    const r=rw();
+    r.money=Math.max(0,parseFloat(el("rwMoney").value)||0);
+    r.mins=Math.max(0,parseInt(el("rwMins").value)||0);
+    r.daily=document.querySelector("#rwDaily button.on").dataset.v==="1";
+    DB.reward=r; await save();
+    el("rwMsg").innerHTML=`<div class="msg yes"><b>Saved</b>${gbp(r.money)}${r.mins?" and "+mins2(r.mins):""} for every day he finishes.</div>`;
+    setTimeout(parentArea,1200);
+  };
+  el("rwPay").onclick=async()=>{
+    const o=owing();
+    if(o.money<=0&&o.mins<=0){ el("rwMsg").innerHTML=`<div class="msg no"><b>Nothing owed</b>He has been paid up to date.</div>`; return; }
+    const r=rw();
+    r.payouts=(r.payouts||[]).concat([{date:today(),money:o.money,mins:o.mins,stamp:Date.now()}]);
+    DB.reward=r; await save();
+    el("rwMsg").innerHTML=`<div class="msg yes"><b>Marked as paid</b>${gbp(o.money)}${o.mins?" and "+mins2(o.mins):""} logged.</div>`;
+    setTimeout(parentArea,1400);
   };
   document.querySelectorAll("#remix button").forEach(b=>b.onclick=async()=>{
     DB.remix=b.dataset.v; await save(); parentArea();
