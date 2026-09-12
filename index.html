@@ -273,6 +273,13 @@
   .ptab{flex:0 0 auto;font:inherit;font-size:.78rem;font-weight:600;padding:8px 13px;border-radius:20px;
     border:2px solid var(--line);background:#fff;color:var(--soft);cursor:pointer;white-space:nowrap}
   .ptab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .gstrip{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FFF7E0,#fff);
+    border:2px solid var(--sun);border-radius:12px;padding:8px 12px;margin-bottom:10px}
+  .gs1{white-space:nowrap;line-height:1.1}
+  .gs1 b{font-family:Fredoka,sans-serif;font-size:1.05rem;color:#7A5200}
+  .gs1 span{font-size:.68rem;color:#A8863C;display:block}
+  .gs2{white-space:nowrap;font-size:.74rem;font-weight:600;color:#7A5200}
+  .gtrack.sm{flex:1;height:12px;margin-top:0}
   .goal{background:linear-gradient(135deg,#FFF7E0,#fff);border:2px solid var(--sun);margin-bottom:12px}
   .glab{font-size:.66rem;font-weight:700;letter-spacing:.07em;color:#9A6B00}
   .gbig{font-family:Fredoka,sans-serif;font-size:1.8rem;font-weight:600;color:#7A5200;line-height:1.15}
@@ -334,6 +341,7 @@
     <button data-go="prog" id="nvP">Progress</button>
     <button data-go="parent" id="nvA">Parent</button>
   </div>
+  <div id="goalStrip" hidden></div>
   <div id="home"></div>
   <div id="brief" hidden></div>
   <div id="quiz" hidden></div>
@@ -1947,7 +1955,7 @@ const SUBJECTS={
   maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
   english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
 };
-const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle",resume:null,reward:{money:2.5,mins:15,daily:true,payouts:[],goal:25,goalName:'a new game'}};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle",resume:null,reward:{money:2.5,mins:15,mode:"newday",payouts:[],goal:25,goalName:'a new game'}};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
 let SUB="maths", VIEW="days";
 
@@ -1958,6 +1966,12 @@ let t0=null, tick=null, qt0=null, unlocked=false;
 const el=id=>document.getElementById(id);
 const show=id=>{
   ["home","brief","quiz","done","parent","explain"].forEach(k=>el(k).hidden=(k!==id));
+  const g=el("goalStrip");
+  if(g){
+    const showIt = (id==="brief"||id==="quiz"||id==="done"||id==="explain");
+    g.innerHTML = showIt ? goalStripHTML() : "";
+    g.hidden = !showIt || !g.innerHTML;
+  }
   const n=el("topNav");
   if(n){
     n.querySelector("#nvD").classList.toggle("on", id!=="parent" && VIEW==="days");
@@ -2080,15 +2094,23 @@ function stack(parts,total){
   return out+"</svg>";
 }
 
-function rw(){ return Object.assign({money:2.5,mins:15,daily:true,payouts:[],goal:25,goalName:'a new game'},DB.reward||{}); }
+function rw(){
+  const r=Object.assign({money:2.5,mins:15,mode:"newday",payouts:[],goal:25,goalName:'a new game'},DB.reward||{});
+  if(r.mode===undefined) r.mode = r.daily===false ? "every" : "newday";   // older settings
+  return r;
+}
 
 /* Which finished sessions earn a reward. "daily" caps it at one a day so he
    cannot farm the same easy day over and over. */
 function earners(){
   const done=DB.sessions.filter(x=>!x.partial&&x.stamp).sort((a,b)=>a.stamp-b.stamp);
-  if(!rw().daily) return done;
+  const mode=rw().mode;
+  if(mode==="every") return done;
   const seen={}, out=[];
-  done.forEach(x=>{ const k=dayKey(x.stamp); if(!seen[k]){seen[k]=1;out.push(x);} });
+  done.forEach(x=>{
+    const k = mode==="calendar" ? dayKey(x.stamp) : x.sub+":"+x.day;   // one per card, or one per date
+    if(!seen[k]){ seen[k]=1; out.push(x); }
+  });
   return out;
 }
 function earned(){
@@ -2106,6 +2128,19 @@ function owing(){
 }
 const gbp=v=>"£"+(Math.round(v*100)/100).toFixed(2);
 function mins2(v){ return v>=60 ? Math.floor(v/60)+"h "+(v%60?v%60+"m":"") : v+"m"; }
+
+function goalStripHTML(){
+  const R=rw(), O=owing();
+  if(!(R.money>0&&R.goal>0)) return "";
+  const pctv=Math.min(100,Math.round(100*O.money/R.goal));
+  const left=Math.max(0,Math.round((R.goal-O.money)*100)/100);
+  const days=R.money>0?Math.ceil(left/R.money):0;
+  return `<div class="gstrip">
+    <div class="gs1"><b>${gbp(O.money)}</b><span>of ${gbp(R.goal)}</span></div>
+    <div class="gtrack sm"><i style="width:${pctv}%"></i></div>
+    <div class="gs2">${left<=0?"Earned!":gbp(left)+" · "+days+"d"}</div>
+  </div>`;
+}
 
 function dayKey(ms){ return new Date(ms).toISOString().slice(0,10); }
 
@@ -2179,6 +2214,7 @@ function progressView(){
   const right=S1.reduce((a,x)=>a+x.score,0);
   const secs=S1.reduce((a,x)=>a+x.secs,0);
   const acc=q?Math.round(100*right/q):0;
+  const missedN=E.filter(x=>x.tries>0).length;
   const tries=E.reduce((a,x)=>a+x.tries,0);
   const helped=E.filter(x=>x.helped).length;
 
@@ -2210,7 +2246,7 @@ function progressView(){
     {n:done.length,l:"days finished",c:CH.blue},
     {n:acc+"%",l:"right first time",c:band(acc)},
     {n:Math.round(secs/60),l:"minutes total",c:CH.violet},
-    {n:E.length,l:"questions missed",c:E.length?CH.amber:CH.green},
+    {n:missedN,l:"questions missed",c:missedN?CH.amber:CH.green},
     {n:streak(),l:streak()===1?"day in a row":"days in a row",c:streak()>=3?CH.green:CH.blue}
   ];
 
@@ -2225,7 +2261,7 @@ function progressView(){
       <div><b>${gbp(O.money)}</b><span>still owed</span></div>
       ${R.mins>0?`<div><b>${mins2(O.mins)}</b><span>game time owed</span></div>`:""}
     </div>
-    <p class="sub" style="margin-top:8px">${E2.n} day${E2.n===1?"":"s"} counted${R.daily?", one a day":""} · ${gbp(R.money)}${R.mins>0?" and "+mins2(R.mins):""} each${P.money>0?` · ${gbp(P.money)} already paid`:""}</p>
+    <p class="sub" style="margin-top:8px">${E2.n} day${E2.n===1?"":"s"} counted · ${gbp(R.money)}${R.mins>0?" and "+mins2(R.mins):""} each${P.money>0?` · ${gbp(P.money)} already paid`:""}</p>
   </div>`:"";
 
   return prize+`<div class="card">
@@ -2254,12 +2290,12 @@ function progressView(){
   <div class="card chartcard"><h3 class="ct">Right first time, or not</h3>
     ${stack([
       {l:"Right first time",v:right,c:CH.green},
-      {l:"Got there after a retry",v:Math.max(0,E.length-helped),c:CH.amber},
+      {l:"Got there after a retry",v:missedN,c:CH.amber},
       {l:"Needed the breakdown",v:helped,c:CH.red}
     ],q)}
     <div class="key2">
       <span><i style="background:${CH.green}"></i>right first time (${right})</span>
-      <span><i style="background:${CH.amber}"></i>after a retry (${Math.max(0,E.length-helped)})</span>
+      <span><i style="background:${CH.amber}"></i>after a retry (${missedN})</span>
       <span><i style="background:${CH.red}"></i>needed the breakdown (${helped})</span>
     </div>
   </div>
@@ -2335,8 +2371,11 @@ function home(){
     if(d.wk!==wk){ if(wk){out+="</div>";wkN++;} wk=d.wk;
       out+=`<div class="week" style="color:${WKC[wkN%4]}">${wk}</div><div class="days">`; }
     const b=best[n], c=WKC[wkN%4];
-    out+=`<button class="day ${b!=null?"done":""}" data-i="${n}" style="border-left-color:${b!=null?"var(--win)":c}">
-      ${b!=null?`<span class="star">${b}/${d.qs.length}</span>`:""}
+    const dp=b!=null?Math.round(100*b/d.qs.length):null;
+    const dc=b==null?c:dp>=67?"var(--win)":dp>=34?"#FF9F1C":"#FF5B4A";
+    out+=`<button class="day ${b!=null?"done":""}" data-i="${n}"
+      style="border-left-color:${dc};${b!=null?`background:${dp>=67?"var(--win-soft)":dp>=34?"#FFF6E4":"#FFEFEC"}`:""}">
+      ${b!=null?`<span class="star" style="color:${dc}">${b}/${d.qs.length}</span>`:""}
       <span class="n">Day ${d.n}</span><span class="t">${d.t}</span></button>`;
   });
   out+="</div>";
@@ -2434,7 +2473,7 @@ async function abandonRun(){
     DB.sessions.push({sid:r.sid,sub:r.sub,day:r.dayN,dayTitle:r.dayTitle,score:r.got,total:r.qi,
                       secs:r.secs,date:today(),stamp:Date.now(),partial:true});
     await enqueue(["Stopped early",today(),SUBJECTS[r.sub].name,r.dayN,strip(r.dayTitle),
-                   r.got,r.qi,r.secs,"","","","","",""]);
+                   r.got,r.qi,r.secs,"","","","","","","",uid()]);
   }
   await clearResume();
   home();
@@ -2487,13 +2526,13 @@ function submit(){
 
   if(want===have){
     answered=true;
-    if(tries===0 && !hUsed) got++;
-    else logError(q,picks,tries);
+    if(tries===0) got++;                       // right first go, help or no help
+    if(tries>0 || hUsed) logError(q,picks,tries);
     [...el("opts").children].forEach(b=>{b.disabled=true;if(sel.includes(+b.dataset.n))b.classList.add("right")});
     el("msg").innerHTML=`<div class="msg yes"><b>${tries===0?"Correct — first go":"Correct now"}</b>
       <div class="work">${q.w}</div></div>`;
     el("helpSlot").innerHTML="";
-    enqueue(questionRow(q, tries===0&&!hUsed, Math.round((Date.now()-qt0)/1000)));
+    enqueue(questionRow(q, tries===0, Math.round((Date.now()-qt0)/1000)));
     el("primary").textContent = qi===S.d.qs.length-1?"Finish":"Next question";
     el("primary").disabled=false;
   } else {
@@ -2528,7 +2567,7 @@ async function finish(){
                     date:today(),stamp:Date.now()});
   await save();
   await enqueue(["Session",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
-                 got,total,secs,"","","","","",""]);
+                 got,total,secs,"","","","","","","",uid()]);
 
   let verdict;
   if(got===total) verdict="Every one right first time. Move on tomorrow.";
@@ -2541,7 +2580,9 @@ async function finish(){
   el("done").innerHTML=`<div class="card">
     <h1>Day ${S.d.n} finished</h1>
     <div style="margin:16px 0 4px"><span class="score">${got}/${total}</span><small>right first time</small></div>
-    <div><span class="pill">${mmss(secs)} taken</span>${over?`<span class="pill">over the ${DB.mins} minutes</span>`:`<span class="pill">inside the ${DB.mins} minutes</span>`}</div>
+    <div><span class="pill">${mmss(secs)} taken</span>${
+      (function(){ const h=DB.errors.filter(e=>e.sid===S.sid&&e.helped).length;
+        return h?`<span class="pill">used the help on ${h}</span>`:""; })()}${over?`<span class="pill">over the ${DB.mins} minutes</span>`:`<span class="pill">inside the ${DB.mins} minutes</span>`}</div>
     <div class="rule" style="margin-top:16px"><p style="font-size:.95rem">${verdict}</p></div>
     ${(rw().money>0||rw().mins>0)?`<div class="prize">
       <div class="plab">EARNED TODAY</div>
@@ -2621,7 +2662,7 @@ function parentArea(){
     <div style="margin-top:12px">
       ${DB.errors.length?DB.errors.slice().reverse().slice(0,60).map(e=>`
         <div class="logitem">
-          <div class="q">${esc(e.q)}</div>
+          <div class="q">${e.tries===0?"✓ ":""}${esc(e.q)}</div>
           ${e.stem?`<div class="d">${esc(e.stem).replace(/\n/g," ")}</div>`:""}
           <div class="picks">${e.picks.map(p=>`<span class="tag">${esc(p)}</span>`).join("")}
             <span class="tag ok">${esc(e.correct)}</span></div>
@@ -2679,9 +2720,14 @@ function parentArea(){
       </div>
     </div>
     <div class="seg" id="rwDaily" style="margin-top:10px">
-      <button data-v="1" class="${rw().daily?"on":""}">Once a day</button>
-      <button data-v="0" class="${rw().daily?"":"on"}">Every session</button>
+      <button data-v="newday" class="${rw().mode==="newday"?"on":""}">Each new day card</button>
+      <button data-v="calendar" class="${rw().mode==="calendar"?"on":""}">One a day</button>
+      <button data-v="every" class="${rw().mode==="every"?"on":""}">Every session</button>
     </div>
+    <p class="sub" style="margin-top:6px">${
+      rw().mode==="newday" ? "Maths Day 1 and English Day 1 both pay. Repeating a day does not." :
+      rw().mode==="calendar" ? "One reward per calendar day, however many he does." :
+      "Every finished session pays, repeats included."}</p>
     <div style="display:flex;gap:10px;margin-top:10px">
       <div style="flex:1"><div class="flab">Saving up for</div>
         <input type="text" id="rwGoalName" value="${esc(rw().goalName)}" style="font-family:Lexend;text-align:left;font-size:.95rem"></div>
@@ -2785,7 +2831,7 @@ function parentArea(){
     const r=rw();
     r.money=Math.max(0,parseFloat(el("rwMoney").value)||0);
     r.mins=Math.max(0,parseInt(el("rwMins").value)||0);
-    r.daily=document.querySelector("#rwDaily button.on").dataset.v==="1";
+    r.mode=document.querySelector("#rwDaily button.on").dataset.v;
     r.goal=Math.max(0,parseFloat(el("rwGoal").value)||0);
     r.goalName=(el("rwGoalName").value||"a treat").slice(0,40);
     DB.reward=r; await save();
@@ -2815,7 +2861,7 @@ function parentArea(){
     DB.sheetUrl=u; DB.sheetKey=el("shKey").value.trim(); await save();
     try{
       await fetch(u,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({key:DB.sheetKey,rows:[["Test row",today(),"—","","Connection test","","","","","","","","",""]]})});
+        body:JSON.stringify({key:DB.sheetKey,rows:[["Test row",today(),"—","","Connection test","","","","","","","","","","",uid()]]})});
       el("shMsg").innerHTML=`<div class="msg yes"><b>Sent</b>Open the sheet and look for a row saying "Test row". If it is not there, check the secret word matches and that the script is deployed for "Anyone".</div>`;
     }catch(e){ el("shMsg").innerHTML=`<div class="msg no"><b>Could not reach it</b>Check the URL ends in /exec.</div>`; }
   };
@@ -2855,9 +2901,12 @@ async function enqueue(row){
   flushQueue();
 }
 
+let sending=false;
 async function flushQueue(){
   if(!DB.sheetUrl) return {ok:false,why:"no url"};
+  if(sending)      return {ok:true,sent:0,busy:true};   // one send at a time
   if(!DB.queue.length) return {ok:true,sent:0};
+  sending=true;
   const batch=DB.queue.slice();
   try{
     await fetch(DB.sheetUrl,{
@@ -2867,17 +2916,24 @@ async function flushQueue(){
     });
     DB.queue=DB.queue.slice(batch.length);
     await save();
+    sending=false;
+    if(DB.queue.length) flushQueue();                   // anything added while we waited
     return {ok:true,sent:batch.length};
-  }catch(e){ return {ok:false,why:"offline"}; }
+  }catch(e){ sending=false; return {ok:false,why:"offline"}; }
 }
 
+let uidN=0;
+function uid(){ return Date.now().toString(36)+"-"+(uidN++)+"-"+Math.random().toString(36).slice(2,6); }
+
 function questionRow(q,rightFirst,secs){
+  const correct=strip(q.multi?q.c.map(i=>q.o[i]).join(" + "):q.o[q.c]);
   return ["Question",today(),SUBJECTS[S.sub].name,S.d.n,strip(S.d.t),
           rightFirst?1:0,1,secs,
           strip(q.a)+(q.s?" — "+strip(q.s):""),
-          picks.map(strip).join(" | "),
-          strip(q.multi?q.c.map(i=>q.o[i]).join(" + "):q.o[q.c]),
-          tries, hUsed?"Yes":"No", hEarly?"Yes":"No"];
+          correct,                                  // what he ended on — always the right one
+          picks.map(strip).join(" | ")||"—",        // anything wrong he tried first
+          correct,
+          tries, hUsed?"Yes":"No", hEarly?"Yes":"No", uid()];
 }
 
 /* questions worth a teacher's time */
@@ -2957,10 +3013,10 @@ async function shareTeacher(){
 
 function csv(){
   const q=v=>{ const t=String(v==null?"":v).replace(/<[^>]+>/g,"").replace(/"/g,'""'); return /[",\n]/.test(t)?'"'+t+'"':t; };
-  const rows=[["Type","Date","Subject","Day","Section","Score","OutOf","Seconds","Question","HeChose","CorrectAnswer","WrongTries","UsedHelp","HelpBeforeTrying"]];
-  DB.sessions.forEach(x=>rows.push(["Session",x.date,SUBJECTS[x.sub].name,x.day,x.dayTitle,x.score,x.total,x.secs,"","","","","",""]));
-  DB.errors.forEach(e=>rows.push(["Missed question",e.date,SUBJECTS[e.sub].name,e.day,e.dayTitle,"","",e.secs,
-    (e.q+(e.stem?" — "+e.stem.replace(/\n/g," "):"")),e.picks.join(" | "),e.correct,e.tries,e.helped?"Yes":"No",e.helpFirst?"Yes":"No"]));
+  const rows=[["Type","Date","Subject","Day","Section","Score","OutOf","Seconds","Question","HisAnswer","WrongPicks","CorrectAnswer","WrongTries","UsedHelp","HelpBeforeTrying"]];
+  DB.sessions.forEach(x=>rows.push(["Session",x.date,SUBJECTS[x.sub].name,x.day,x.dayTitle,x.score,x.total,x.secs,"","","","","","",""]));
+  DB.errors.forEach(e=>rows.push(["Question",e.date,SUBJECTS[e.sub].name,e.day,e.dayTitle,e.tries===0?1:0,1,e.secs,
+    (e.q+(e.stem?" — "+e.stem.replace(/\n/g," "):"")),e.correct,e.picks.join(" | ")||"—",e.correct,e.tries,e.helped?"Yes":"No",e.helpFirst?"Yes":"No"]));
   return rows.map(r=>r.map(q).join(",")).join("\n");
 }
 
