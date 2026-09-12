@@ -265,6 +265,22 @@
   .k2 b{display:block;font-family:Fredoka,sans-serif;font-size:1.45rem;line-height:1.15}
   .k2 span{font-size:.68rem;color:var(--soft);line-height:1.25;display:block;margin-top:2px}
   .chartcard{margin-top:12px}
+  .nav{display:flex;gap:6px;margin-bottom:12px}
+  .nav button{flex:1;font:inherit;font-size:.85rem;font-weight:600;padding:10px 6px;border-radius:11px;
+    border:2px solid var(--line);background:#fff;color:var(--soft);cursor:pointer}
+  .nav button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .ptabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+  .ptab{flex:0 0 auto;font:inherit;font-size:.78rem;font-weight:600;padding:8px 13px;border-radius:20px;
+    border:2px solid var(--line);background:#fff;color:var(--soft);cursor:pointer;white-space:nowrap}
+  .ptab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .goal{background:linear-gradient(135deg,#FFF7E0,#fff);border:2px solid var(--sun);margin-bottom:12px}
+  .glab{font-size:.66rem;font-weight:700;letter-spacing:.07em;color:#9A6B00}
+  .gbig{font-family:Fredoka,sans-serif;font-size:1.8rem;font-weight:600;color:#7A5200;line-height:1.15}
+  .gbig span{font-size:.9rem;font-weight:400;color:#A8863C}
+  .gtrack{position:relative;height:20px;background:#F2E6C4;border-radius:10px;margin-top:10px;overflow:hidden}
+  .gtrack i{display:block;height:100%;background:linear-gradient(90deg,#FFC93C,#16C172);border-radius:10px;transition:width .6s}
+  .gtrack em{position:absolute;right:8px;top:1px;font-style:normal;font-weight:700;color:#7A5200;font-size:.8rem}
+  .gfoot{font-size:.84rem;color:#7A5200;margin-top:7px}
   .prize{background:linear-gradient(135deg,#FFF1C9,#FFE1A8);border-radius:14px;padding:14px 16px;margin-top:14px;text-align:center}
   .plab{font-size:.68rem;font-weight:700;letter-spacing:.08em;color:#946400}
   .pbig{font-family:Fredoka,sans-serif;font-size:1.9rem;font-weight:600;color:#7A5200;line-height:1.15;margin-top:2px}
@@ -313,15 +329,18 @@
 </style>
 
 <div class="wrap">
+  <div class="nav" id="topNav">
+    <button data-go="days" id="nvD">Days</button>
+    <button data-go="prog" id="nvP">Progress</button>
+    <button data-go="parent" id="nvA">Parent</button>
+  </div>
   <div id="home"></div>
   <div id="brief" hidden></div>
   <div id="quiz" hidden></div>
   <div id="done" hidden></div>
   <div id="explain" hidden></div>
   <div id="parent" hidden></div>
-  <div class="foot" id="globalFoot">
-    <button class="link" id="toParentGlobal">Parent area</button>
-  </div>
+
 </div>
 
 <script>
@@ -1928,7 +1947,7 @@ const SUBJECTS={
   maths:  {key:"maths",  name:"Maths",   cls:"m", days:MATHS,   accent:"#0E9AA7", soft:"#E2F4F6", numeric:true},
   english:{key:"english",name:"English", cls:"e", days:ENGLISH, accent:"#7B5CD6", soft:"#EFEAFC", numeric:false}
 };
-const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle",resume:null,reward:{money:2.5,mins:15,daily:true,payouts:[]}};
+const DEFAULTS={pin:"1234",mins:10,best:{maths:{},english:{}},sessions:[],errors:[],sheetUrl:"",sheetKey:"",queue:[],remix:"shuffle",resume:null,reward:{money:2.5,mins:15,daily:true,payouts:[],goal:25,goalName:'a new game'}};
 let DB=JSON.parse(JSON.stringify(DEFAULTS));
 let SUB="maths", VIEW="days";
 
@@ -1939,7 +1958,12 @@ let t0=null, tick=null, qt0=null, unlocked=false;
 const el=id=>document.getElementById(id);
 const show=id=>{
   ["home","brief","quiz","done","parent","explain"].forEach(k=>el(k).hidden=(k!==id));
-  const f=el("globalFoot"); if(f) f.hidden=(id==="parent");
+  const n=el("topNav");
+  if(n){
+    n.querySelector("#nvD").classList.toggle("on", id!=="parent" && VIEW==="days");
+    n.querySelector("#nvP").classList.toggle("on", id!=="parent" && VIEW==="progress");
+    n.querySelector("#nvA").classList.toggle("on", id==="parent");
+  }
   window.scrollTo(0,0);
 };
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -2056,7 +2080,7 @@ function stack(parts,total){
   return out+"</svg>";
 }
 
-function rw(){ return Object.assign({money:2.5,mins:15,daily:true,payouts:[]},DB.reward||{}); }
+function rw(){ return Object.assign({money:2.5,mins:15,daily:true,payouts:[],goal:25,goalName:'a new game'},DB.reward||{}); }
 
 /* Which finished sessions earn a reward. "daily" caps it at one a day so he
    cannot farm the same easy day over and over. */
@@ -2271,6 +2295,22 @@ function home(){
     show("home"); return;
   }
 
+  const RW=rw(), OW=owing();
+  const goalBar = (RW.money>0&&RW.goal>0) ? (function(){
+    const pctv=Math.min(100,Math.round(100*OW.money/RW.goal));
+    const left=Math.max(0,Math.round((RW.goal-OW.money)*100)/100);
+    const days=RW.money>0?Math.ceil(left/RW.money):0;
+    return `<div class="card goal">
+      <div class="grow1">
+        <div class="glab">SAVING FOR ${esc(String(RW.goalName)).toUpperCase()}</div>
+        <div class="gbig">${gbp(OW.money)} <span>of ${gbp(RW.goal)}</span></div>
+      </div>
+      <div class="gtrack"><i style="width:${pctv}%"></i><em>£</em></div>
+      <div class="gfoot">${left<=0?"You have earned it — go and claim it!":
+        `<b>${gbp(left)}</b> to go · that is <b>${days}</b> more day${days===1?"":"s"}`}</div>
+    </div>`;
+  })() : "";
+
   const R=DB.resume;
   const resumeCard = R ? `<div class="card resume">
       <div class="rlab">PAUSED</div>
@@ -2282,7 +2322,7 @@ function home(){
       </div>
     </div>` : "";
 
-  let out=resumeCard+`<div class="card">
+  let out=goalBar+resumeCard+`<div class="card">
     <h1>Morning practice</h1>
     <p class="sub">Ten minutes a day. Pick today's card, read the method together, then six questions. Nothing moves on until the answer is right.</p>
     ${tabs}
@@ -2616,6 +2656,16 @@ function parentArea(){
     </div>
 
     <div class="hr"></div>
+    <h3>Send to the teacher</h3>
+    <p class="sub">A one-page list of everything he has struggled with, ready to print, save or send.</p>
+    <div class="actions">
+      <button class="btn sm" id="exPdf">Print / save as PDF</button>
+      <button class="btn ghost sm" id="exXls">Download for Excel</button>
+      <button class="btn ghost sm" id="exWa">Send on WhatsApp</button>
+    </div>
+    <div id="exMsg"></div>
+
+    <div class="hr"></div>
     <h3>Rewards</h3>
     <p class="sub">What he earns for finishing a day. Set either to zero to turn it off.</p>
     <div style="display:flex;gap:10px;margin-top:8px">
@@ -2631,6 +2681,12 @@ function parentArea(){
     <div class="seg" id="rwDaily" style="margin-top:10px">
       <button data-v="1" class="${rw().daily?"on":""}">Once a day</button>
       <button data-v="0" class="${rw().daily?"":"on"}">Every session</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <div style="flex:1"><div class="flab">Saving up for</div>
+        <input type="text" id="rwGoalName" value="${esc(rw().goalName)}" style="font-family:Lexend;text-align:left;font-size:.95rem"></div>
+      <div style="width:110px"><div class="flab">Target £</div>
+        <input type="number" id="rwGoal" step="1" min="0" value="${rw().goal}"></div>
     </div>
     <div class="actions"><button class="btn sm" id="rwSave">Save rewards</button></div>
     <div class="stat" style="margin-top:12px">
@@ -2690,6 +2746,7 @@ function parentArea(){
     </div>
   </div>`;
 
+  tabifyParent();
   el("rep").value=report();
   el("csv").value=csv();
   el("copycsv").onclick=async()=>{
@@ -2711,6 +2768,15 @@ function parentArea(){
     catch(e){ document.execCommand("copy"); el("copy").textContent="Copied"; }
     setTimeout(()=>el("copy").textContent="Copy to clipboard",1800);
   };
+  el("exPdf").onclick=()=>teacherPrint();
+  el("exXls").onclick=()=>{
+    const blob=new Blob(["\ufeff"+csv()],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="practice-results-"+new Date().toISOString().slice(0,10)+".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  };
+  el("exWa").onclick=()=>shareTeacher();
   document.querySelectorAll("#rwDaily button").forEach(b=>b.onclick=()=>{
     document.querySelectorAll("#rwDaily button").forEach(x=>x.classList.remove("on"));
     b.classList.add("on");
@@ -2720,6 +2786,8 @@ function parentArea(){
     r.money=Math.max(0,parseFloat(el("rwMoney").value)||0);
     r.mins=Math.max(0,parseInt(el("rwMins").value)||0);
     r.daily=document.querySelector("#rwDaily button.on").dataset.v==="1";
+    r.goal=Math.max(0,parseFloat(el("rwGoal").value)||0);
+    r.goalName=(el("rwGoalName").value||"a treat").slice(0,40);
     DB.reward=r; await save();
     el("rwMsg").innerHTML=`<div class="msg yes"><b>Saved</b>${gbp(r.money)}${r.mins?" and "+mins2(r.mins):""} for every day he finishes.</div>`;
     setTimeout(parentArea,1200);
@@ -2812,6 +2880,81 @@ function questionRow(q,rightFirst,secs){
           tries, hUsed?"Yes":"No", hEarly?"Yes":"No"];
 }
 
+/* questions worth a teacher's time */
+function flaggedList(){
+  return DB.errors.filter(e=>e.tries>=2||e.secs>=45||e.helped)
+    .slice().reverse()
+    .map(e=>({date:e.date,sub:SUBJECTS[e.sub].name,day:e.day,sec:e.dayTitle,
+              q:strip(e.q)+(e.stem?" — "+strip(e.stem):""),
+              chose:e.picks.map(strip).join(", ")||"—",right:strip(e.correct),
+              why:[e.tries>=2?e.tries+" wrong tries":"",e.secs>=45?e.secs+"s spent":"",
+                   e.helped?"needed step-by-step":""].filter(Boolean).join(", ")}));
+}
+
+function teacherSummary(){
+  const q=DB.sessions.reduce((a,x)=>a+x.total,0);
+  const r=DB.sessions.reduce((a,x)=>a+x.score,0);
+  const F=flaggedList();
+  return `Maths & English practice — progress so far\n`+
+    `${DB.sessions.filter(x=>!x.partial).length} sessions, ${q} questions, `+
+    `${q?Math.round(100*r/q):0}% right first time.\n`+
+    `${F.length} question${F.length===1?"":"s"} he is struggling with:\n\n`+
+    F.slice(0,12).map((f,i)=>`${i+1}. [${f.sub} Day ${f.day}] ${f.q}\n   He said: ${f.chose} — correct: ${f.right} (${f.why})`).join("\n\n");
+}
+
+function teacherPrint(){
+  const F=flaggedList();
+  const q=DB.sessions.reduce((a,x)=>a+x.total,0);
+  const r=DB.sessions.reduce((a,x)=>a+x.score,0);
+  const doc=`<!doctype html><meta charset="utf-8"><title>Practice — please help with these</title>
+  <style>
+    body{font:13px/1.5 -apple-system,system-ui,sans-serif;color:#16294A;margin:26px}
+    h1{font-size:19px;margin:0 0 3px} .m{color:#5D7086;font-size:11px;margin-bottom:14px}
+    .s{display:flex;gap:20px;margin:12px 0 18px;font-size:12px}
+    .s b{display:block;font-size:19px}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    th{text-align:left;background:#2A78D6;color:#fff;padding:6px;font-size:10px}
+    td{padding:6px;border-bottom:1px solid #D9E6F5;vertical-align:top}
+    tr:nth-child(even) td{background:#F7FAFD}
+    .tick{width:16px;height:16px;border:1.5px solid #7E93A8;border-radius:3px;display:inline-block}
+    .w{color:#C4372E;font-weight:600}
+    @media print{ body{margin:10mm} thead{display:table-header-group} }
+  </style>
+  <h1>Please help him with these</h1>
+  <div class="m">Practice papers at home · generated ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}
+   · questions he got wrong twice or more, spent over 45 seconds on, or needed a step-by-step breakdown for</div>
+  <div class="s">
+    <div><b>${DB.sessions.filter(x=>!x.partial).length}</b>sessions finished</div>
+    <div><b>${q}</b>questions answered</div>
+    <div><b>${q?Math.round(100*r/q):0}%</b>right first time</div>
+    <div><b>${F.length}</b>need attention</div>
+  </div>
+  <table><thead><tr><th>Done</th><th>Date</th><th>Subject</th><th>Day</th><th>Section</th>
+    <th>Question</th><th>He answered</th><th>Correct</th><th>Why flagged</th></tr></thead><tbody>
+  ${F.length?F.map(f=>`<tr><td><span class="tick"></span></td><td>${esc(f.date)}</td><td>${esc(f.sub)}</td>
+    <td>${f.day}</td><td>${esc(f.sec)}</td><td>${esc(f.q)}</td>
+    <td class="w">${esc(f.chose)}</td><td>${esc(f.right)}</td><td>${esc(f.why)}</td></tr>`).join("")
+   :`<tr><td colspan="9">Nothing flagged yet.</td></tr>`}
+  </tbody></table>`;
+  const w=window.open("","_blank");
+  if(!w){ el("exMsg").innerHTML=`<div class="msg no"><b>Blocked</b>Allow pop-ups for this site, then try again.</div>`; return; }
+  w.document.write(doc); w.document.close();
+  setTimeout(()=>{ try{w.focus();w.print();}catch(e){} },400);
+}
+
+async function shareTeacher(){
+  const text=teacherSummary();
+  const file=new File(["\ufeff"+csv()],"practice-results.csv",{type:"text/csv"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:"Practice results",text:text,files:[file]});
+      return;
+    }
+    if(navigator.share){ await navigator.share({title:"Practice results",text:text}); return; }
+  }catch(e){ if(e&&e.name==="AbortError") return; }
+  window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank");
+}
+
 function csv(){
   const q=v=>{ const t=String(v==null?"":v).replace(/<[^>]+>/g,"").replace(/"/g,'""'); return /[",\n]/.test(t)?'"'+t+'"':t; };
   const rows=[["Type","Date","Subject","Day","Section","Score","OutOf","Seconds","Question","HeChose","CorrectAnswer","WrongTries","UsedHelp","HelpBeforeTrying"]];
@@ -2819,6 +2962,31 @@ function csv(){
   DB.errors.forEach(e=>rows.push(["Missed question",e.date,SUBJECTS[e.sub].name,e.day,e.dayTitle,"","",e.secs,
     (e.q+(e.stem?" — "+e.stem.replace(/\n/g," "):"")),e.picks.join(" | "),e.correct,e.tries,e.helped?"Yes":"No",e.helpFirst?"Yes":"No"]));
   return rows.map(r=>r.map(q).join(",")).join("\n");
+}
+
+let PTAB=0;
+/* splits the parent page on its dividers and turns each part into a tab */
+function tabifyParent(){
+  const root=el("parent").querySelector(".card");
+  if(!root) return;
+  const parts=root.innerHTML.split('<div class="hr"></div>');
+  if(parts.length<2) return;
+  const names=parts.map((p,i)=>{
+    if(i===0) return "Overview";
+    const m=p.match(/<h3>(.*?)<\/h3>/);
+    return m?m[1].replace(/&[a-z]+;/g," ").trim():"More";
+  });
+  if(PTAB>=parts.length) PTAB=0;
+  root.innerHTML=
+    `<div class="ptabs">${names.map((n,i)=>
+      `<button class="ptab ${i===PTAB?"on":""}" data-i="${i}">${n}</button>`).join("")}</div>`+
+    parts.map((p,i)=>`<div class="ppanel" data-i="${i}" ${i===PTAB?"":'style="display:none"'}>${p}</div>`).join("");
+  root.querySelectorAll(".ptab").forEach(b=>b.onclick=()=>{
+    PTAB=+b.dataset.i;
+    root.querySelectorAll(".ptab").forEach(x=>x.classList.toggle("on",x===b));
+    root.querySelectorAll(".ppanel").forEach(x=>x.style.display=(+x.dataset.i===PTAB)?"":"none");
+    window.scrollTo(0,0);
+  });
 }
 
 function report(){
@@ -2860,7 +3028,12 @@ window.addEventListener("resize",()=>{
     if(X && !el("explain").hidden && el("xStage")){ X.def.build(el("xStage"),X.p); exPaint(); }
   },250);
 });
-document.getElementById("toParentGlobal").onclick=()=>parentGate();
+document.querySelectorAll("#topNav button").forEach(b=>b.onclick=async()=>{
+  if(!el("quiz").hidden){ clearInterval(tick); await saveResume(); }
+  const g=b.dataset.go;
+  if(g==="parent"){ parentGate(); }
+  else { VIEW=(g==="prog")?"progress":"days"; home(); }
+});
 window.addEventListener("online",()=>flushQueue());
 load().then(()=>{paint();home();flushQueue()});
 </script>
